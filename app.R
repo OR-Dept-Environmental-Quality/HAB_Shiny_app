@@ -5,6 +5,7 @@ library(shiny); library(shinythemes); library(shinyWidgets)
 library(leaflet)
 library(DT)
 library(viridis)
+library(scales)
 
 load("data.RData")
 
@@ -45,9 +46,9 @@ shinyApp(
                                                   startview = "year",
                                                   weekstart = 0),
                             
-                            # _ Statistical Base ----
+                            # _ Summary Statistics ----
                             checkboxGroupInput(inputId = "matrix",
-                                               label = "Statistical Base:",
+                                               label = "Summary Statistics:",
                                                choices = c("Mean" = "Mean",
                                                            "Maximum" = "Maximum",
                                                            "Minimum" = "Minimum"),
@@ -83,13 +84,13 @@ shinyApp(
     
     # chart ----
     pal <- c("orange","blue","green","white","white","white")
-    pal <- setNames(pal,unique(sort(dta$`Statistical Base`)))
+    pal <- setNames(pal,unique(sort(dta$`Summary Statistics`)))
     
     df <- reactive({
       
       dta %>% 
         dplyr::filter(GNISIDNAME %in% input$lakes) %>% 
-        dplyr::filter(`Statistical Base` %in% input$matrix) %>% 
+        dplyr::filter(`Summary Statistics` %in% input$matrix) %>% 
         dplyr::filter(Date >= input$date[1],Date <= input$date[2])
       
     })
@@ -99,14 +100,17 @@ shinyApp(
       plotly::plot_ly(
         data = df(),
         x = ~Date,
-        y = ~`Value (cells/mL)`,
-        split = ~`Statistical Base`,
+        y = ~`Cyanobacteria (cells/mL)`,
+        split = ~`Summary Statistics`,
         type = "scatter",
         mode = "lines",
-        color = ~`Statistical Base`,
+        color = ~`Summary Statistics`,
         colors = pal) %>% 
         plotly::layout(xaxis = list(title = "Date", range = c(min(df()$Date),max(df()$Date))),
-                       yaxis = list(title = "Count (cells/mL)"))
+                       yaxis = list(title = "Cyanobacteria (cells/mL)"),
+                       title = as.character(unique(df()$GNISIDNAME))
+        )
+      
       
     })
     
@@ -114,10 +118,17 @@ shinyApp(
     
     # data table ----
     
+    df_tbl <- reactive({
+      
+      df() %>% 
+        dplyr::select(GNISIDNAME,Date,`Cyanobacteria (cells/mL)`,`Summary Statistics`,`Within Drinking Water Source Area`) %>% 
+        dplyr::mutate(`Cyanobacteria (cells/mL)` = scales::comma(`Cyanobacteria (cells/mL)`))
+    })
+    
     output$table <- DT::renderDataTable({
       
       DT::datatable(
-        data = df(),
+        data = df_tbl(),
         style = 'bootstrap',
         extensions = 'Buttons',
         options = list(dom = 'Bfrtilp',
@@ -132,8 +143,8 @@ shinyApp(
                        )),
         rownames = FALSE,
         filter = 'bottom'
-      ) %>% 
-        DT::formatDate("Date","toLocaleString")
+      ) #%>% 
+        #DT::formatDate("Date","toLocaleString")
     }, server = FALSE)
     
     

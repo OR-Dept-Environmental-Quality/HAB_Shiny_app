@@ -1,0 +1,13 @@
+name: HAB_Shiny_app
+title: HAB_Shiny_app
+username:
+account: ygrund
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 2609954
+bundleId: 3447385
+url: https://ygrund.shinyapps.io/HAB_Shiny_app/
+when: 1595966671.37674
+asMultiple: FALSE
+asStatic: FALSE
+ignoredFiles: .RData|data.R|ReadMe.txt|test.R|test1.R|Data/data.csv|Data/data_2016-20.xlsx

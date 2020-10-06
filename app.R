@@ -23,17 +23,8 @@ shinyApp(
                       # _ Map ----
                       wellPanel(
                         
-                        tags$style(type = "text/css", "#map_shape {height: calc(80vh - 80px) !important;}"),
-                        leaflet::leafletOutput("map_shape", width="100%",height="100%")
-                      ),
-                      
-                      wellPanel(
-                        
-                        shiny::sliderInput(inputId = "day",
-                                           label = "Select a Day to Display on the Map:",
-                                           min = min(dta$Date),
-                                           max = max(dta$Date),
-                                           value = max(dta$Date))
+                        tags$style(type = "text/css", "#map {height: calc(80vh - 80px) !important;}"),
+                        leaflet::leafletOutput("map", width="100%",height="100%")
                       ),
                       
                       wellPanel(
@@ -52,16 +43,20 @@ shinyApp(
                                                       # selected = "Alkali Lake_01116863",
                                                       multiple = FALSE),
                             
-                            # _ Date ----
+                            # _ Dates ----
+                            shiny::dateInput(inputId = "date_map",
+                                             label = "Select a date to display cyano status on the Map:",
+                                             value = max(dta$Date),
+                                             min = min(dta$Date),
+                                             max = max(dta$Date),
+                                             format = "yyyy-mm-dd",
+                                             startview = "year",
+                                             weekstart = 0,
+                                             datesdisabled = missing.dates$Date),
                             
-                            # shiny::sliderInput(inputId = "day_1",
-                            #                   label = "Select a Day to Display on the Map:",
-                            #                   min = min(dta$Date),
-                            #                   max = max(dta$Date),
-                            #                   value = max(dta$Date)),
                             
                             shiny::dateRangeInput(inputId = "date_plot",
-                                                  label = "Select Date Range to plot:",
+                                                  label = "Select a date range to plot time series:",
                                                   start = min(dta$Date),
                                                   end = max(dta$Date),
                                                   min = min(dta$Date),
@@ -103,12 +98,40 @@ shinyApp(
   
   server <- function(input, output, session) {
     
-    # map ----
-    output$map_shape <- leaflet::renderLeaflet({
+    # Map ----
+    
+    # _map 1st ----
+    dta.test <- dta %>% 
+      dplyr::filter(Date %in%  c(as.Date("2020-09-20"),as.Date("2020-09-19"),as.Date("2020-07-08")))
+    date <- max(dta.test$Date)
+    
+    map.day <- lookup.date %>% 
+      dplyr::filter(Date %in%  date) %>% 
+      dplyr::mutate(map_day = paste0(Year.dta,Day.dta))
+    
+    tif.dir <- "//deqhq1/WQ-Share/Harmful Algal Blooms Coordination Team/GIS/cyan/2020/"
+    file.name.1 <- paste0(map.day$map_day,"_EPSG3857.tif")
+    
+    #r <- raster::readAll(raster(paste0(tif.dir,file.name.1)))
+    r <- raster::raster(paste0(tif.dir,file.name.1))
+    # crs(r) <- sp::CRS("+init=epsg:3857")
+    
+    pal.map <- colorNumeric(palette = c("#feb24c","#66c2a4","#67001f"), values(r), na.color = "transparent")
+    
+    #m <- leaflet() %>%
+    #  addTiles() %>%
+    #  addRasterImage(r, colors=pal, opacity = 0.9, maxBytes = 123123123) %>%
+    #  addLegend(pal = pal, values = values(r), title = "Test")
+    
+    
+    output$map <- leaflet::renderLeaflet({
       
       leaflet::leaflet() %>% 
-        leaflet::addProviderTiles(providers$Esri.NatGeoWorldMap) %>%
+        leaflet::addProviderTiles(providers$Esri.NatGeoWorldMap) %>% 
+        #leaflet::addTiles() %>% 
         leaflet::setView(lng = -122.1739, lat = 44.0582, zoom=7) %>%
+        leaflet::addRasterImage(r, colors=pal.map, opacity = 1) %>% 
+        leaflet::addLegend(pal = pal.map, values = values(r),title = "Cyanobacteria (cells/mL)") %>% 
         leaflet::addPolygons(data = study_lakes,
                              color = "blue",
                              weight = 2,
@@ -118,46 +141,76 @@ shinyApp(
                              fillColor = "transparent",
                              fillOpacity = 1.0,
                              #highlightOptions = highlightOptions(color = "",
-                              #                                   weight = 2,
-                              #                                   bringToFront = FALSE),
+                             #                                   weight = 2,
+                             #                                   bringToFront = FALSE),
                              label = ~study_lakes$Name) %>% 
-        leaflet::addRasterImage(r) %>%
         leaflet.extras::addResetMapButton() %>% 
         leaflet::addMiniMap(position = "bottomleft",
                             width = 300,
                             height = 300,
                             zoomLevelFixed = 5)
+      
     })
     
-    # Observe click on shapes
+    # _map reactive ----
+    
+    df.map.date <- reactive({
+      
+      lookup.date %>% 
+        dplyr::filter(Date == input$date_map) %>% 
+        dplyr::mutate(map_day = paste0(Year.dta,Day.dta))
+      
+    })
+    
+    # tif.dir <- "//deqhq1/WQ-Share/Harmful Algal Blooms Coordination Team/GIS/cyan/2020/"
+    
+    file.name.2 <- reactive(paste0(df.map.date()$map_day,"_EPSG3857.tif"))
+    
+    rst <- reactive({
+      
+      raster::readAll(raster(paste0(tif.dir,file.name.2())))
+      
+    })
+    
+    # crs(rst) <- CRS("+init=epsg:3857")
+    
     observe({
       
-      click <- input$map_shape_click
+      leafletProxy(mapId = "map", 
+                   data = rst())
       
-      # coords <- input$map_shape_bounds
+      
+    })                                
+    
+    # _observe click on the map ----
+    observe({
+      
+      click <- input$map_click
+      
+      # coords <- input$map_bounds
       
       #if(is.null(click))
       #  return()
       #else
-      #  leafletProxy("map_shape") %>% 
-       # fitBounds(coords$west,
-        #          coords$south,
-         #         coords$east,
-          #        coords$north)
+      #  leafletProxy("map") %>% 
+      # fitBounds(coords$west,
+      #          coords$south,
+      #         coords$east,
+      #        coords$north)
       
       if(is.null(click))
         return()
       else
-        leafletProxy("map_shape") %>% 
+        leafletProxy("map") %>% 
         setView(
           lng = click$lng,
           lat = click$lat,
           zoom = 12)
     })
     
-    # chart ----
-    pal <- c("orange","blue","green","white","white","white")
-    pal <- setNames(pal,unique(sort(dta$`Summary Statistics`)))
+    # Chart ----
+    pal.plot <- c("orange","blue","green","white","white","white")
+    pal.plot <- setNames(pal.plot,unique(sort(dta$`Summary Statistics`)))
     
     df <- reactive({
       
@@ -193,7 +246,7 @@ shinyApp(
         type = "scatter",
         mode = "lines",
         color = ~`Summary Statistics`,
-        colors = pal) %>% 
+        colors = pal.plot) %>% 
         plotly::layout(xaxis = list(title = "Date", range = c(min(df()$Date),max(df()$Date))),
                        # yaxis = list(title = "Cyanobacteria (cells/mL)"),
                        title = as.character(unique(df()$GNISIDNAME))
@@ -204,8 +257,7 @@ shinyApp(
     })
     
     
-    
-    # data table ----
+    # Data table ----
     
     df_tbl <- reactive({
       

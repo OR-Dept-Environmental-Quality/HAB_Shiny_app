@@ -42,9 +42,9 @@ lakes <- rgdal::readOGR(dsn = "//deqhq1/WQ-Share/Harmful Algal Blooms Coordinati
 # summary(lakes)
 
 study_lakes <- lakes@data #%>% 
-  #dplyr::mutate(zoom = ifelse(!is.na(GNIS_Name), 
-  #                            ifelse(AreaSqKm < 50), AreaSqKm*,
-  #                            ifelse(AreaSqKm > 50), , NA))
+#dplyr::mutate(zoom = ifelse(!is.na(GNIS_Name), 
+#                            ifelse(AreaSqKm < 50), AreaSqKm*,
+#                            ifelse(AreaSqKm > 50), , NA))
 
 study_lakes <- sp::spTransform(lakes,CRS("+proj=longlat +datum=WGS84"))
 
@@ -62,9 +62,21 @@ study_lakes <- sp::spTransform(lakes,CRS("+proj=longlat +datum=WGS84"))
 ## crs(r) <- CRS("+init=epsg:3857")
 
 # Date Lookup Table ----
+fulldays <- readxl::read_xlsx("//deqhq1/WQ-Share/Harmful Algal Blooms Coordination Team/HAB_Shiny_app/2016-2020.xlsx",
+                          sheet = "2016-2020") %>% 
+  dplyr::mutate(Date = lubridate::ymd(Date))
+
 lookup.date <- dta %>% 
   dplyr::group_by(Date, Year, Day) %>% 
-  dplyr::summarise(n=n())
+  dplyr::summarise(n=n()) %>% 
+  dplyr::right_join(fulldays, by="Date") %>% 
+  dplyr::rename(Year.dta = Year.x,
+                Day.dta = Day.x,
+                Year.fulldays = Year.y,
+                Day.fulldays = Day.y)
+
+missing.dates <- lookup.date %>% 
+  dplyr::filter(is.na(Day.dta))
 
 # ----
 

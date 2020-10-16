@@ -1,9 +1,9 @@
 library(tidyverse)
 library(lubridate)
+library(readxl)
+# library(sp); library(sf)
 library(rgdal) 
 library(raster)
-library(sp); library(sf)
-library(readxl)
 
 setwd("//deqhq1/WQ-Share/Harmful Algal Blooms Coordination Team/HAB_Shiny_app")
 
@@ -34,29 +34,23 @@ dta <- rbind(dta1,dta2) %>%
 
 # Map: shapefile ----
 lakes <- rgdal::readOGR(dsn = "//deqhq1/WQ-Share/Harmful Algal Blooms Coordination Team/GIS/cyan/NHDwaterbody_resolvable_lakes.shp",
-                        layer = "NHDwaterbody_resolvable_lakes",
-                        integer64="warn.loss",
-                        verbose = FALSE,
-                        stringsAsFactors = FALSE)
+                        layer = "NHDwaterbody_resolvable_lakes")
+
 # head(lakes) or head(lakes@data)
 # summary(lakes)
 
-study_lakes <- lakes@data #%>% 
-#dplyr::mutate(zoom = ifelse(!is.na(GNIS_Name), 
-#                            ifelse(AreaSqKm < 50), AreaSqKm*,
-#                            ifelse(AreaSqKm > 50), , NA))
+# lakes <- sp::spTransform(lakes,CRS("+proj=longlat +datum=WGS84"))
 
-study_lakes <- sp::spTransform(lakes,CRS("+proj=longlat +datum=WGS84"))
+# lakes <- sf::st_read(dsn = "//deqhq1/WQ-Share/Harmful Algal Blooms Coordination Team/GIS/cyan/NHDwaterbody_resolvable_lakes.shp",
+#                      layer = "NHDwaterbody_resolvable_lakes") %>% 
+#         sf::st_transform(crs = "+proj=longlat +datum=WGS84")
 
-# lake_names <- unique(sort(dta$GNISNAME))
-# study_lakes <- subset(lakes,lakes$NAME %in% c(lake_names))
+# Map: raster ----
 
-# Map: Raster ----
 # check if the r object is loaded into memory, run:
 # raster::inMemory(r)
 # if FALSE, to force the raster into memory use
 ## r <- raster::readAll(raster("//deqhq1/WQ-Share/Harmful Algal Blooms Coordination Team/GIS/cyan/2020/2020190_EPSG3857.tif"))
-# r <- readAll(raster("//deqhq1/WQ-Share/Harmful Algal Blooms Coordination Team/GIS/cyan/2020/mosaic/2020190.tif"))
 # r
 # raster::crs(r)
 ## crs(r) <- CRS("+init=epsg:3857")

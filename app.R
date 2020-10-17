@@ -22,41 +22,54 @@ shinyApp(
     shiny::navbarPage("Brian is Awesome! :-)",
                       
                       wellPanel(
-                        # Waterbody ----
-                        shinyWidgets::pickerInput(inputId = "waterbody",
-                                                  label = "Select a Waterbody:",
-                                                  choices = list(
-                                                    "Within Drinking Water Source Area" = 
-                                                      unique(sort(dta[which(dta$wi_DWSA == c("Yes")),]$GNISIDNAME)),
-                                                    "Not-Within Drinking Water Source Area" = 
-                                                      unique(sort(dta[which(dta$wi_DWSA == c("No")),]$GNISIDNAME))
-                                                  ),
-                                                  # selected = "Alkali Lake_01116863",
-                                                  multiple = FALSE)
                         
+                        sidebarLayout(
+                          
+                          sidebarPanel(width = 3,
+                                       
+                                       # (1) Waterbody ----
+                                       shinyWidgets::pickerInput(inputId = "waterbody",
+                                                                 label = "Select a Waterbody:",
+                                                                 choices = list(
+                                                                   "Oregon",
+                                                                   "Within Drinking Water Source Area" = 
+                                                                     unique(sort(dta[which(dta$wi_DWSA == c("Yes")),]$GNISIDNAME)),
+                                                                   "Not-Within Drinking Water Source Area" = 
+                                                                     unique(sort(dta[which(dta$wi_DWSA == c("No")),]$GNISIDNAME))
+                                                                 ),
+                                                                 # selected = "Alkali Lake_01116863",
+                                                                 multiple = FALSE)
+                                       
+                                       
+                          ),
+                          
+                          
+                          mainPanel(width = 9,
+                                    
+                                    # (2) Map ----
+                                    wellPanel(
+                                      tags$style(type = "text/css", "#map {height: calc(80vh - 80px) !important;}"),
+                                      leaflet::leafletOutput("map", width="100%",height="100%")),
+                                    
+                                    
+                                    # _ Dates ----
+                                    wellPanel(
+                                      shiny::sliderInput(inputId = "date_map",
+                                                         label = "Select a Day to Display on the Map:",
+                                                         min = min(dta$Date),
+                                                         max = max(dta$Date),
+                                                         value = max(dta$Date)))
+                                    
+                          )
+                          
+                        )
                       ),
                       
-                      # Map ----
-                      wellPanel(
-                        
-                        tags$style(type = "text/css", "#map {height: calc(80vh - 80px) !important;}"),
-                        leaflet::leafletOutput("map", width="100%",height="100%"),
-                        
-                        
-                        # _ Dates ----
-                        shiny::sliderInput(inputId = "date_map",
-                                           label = "Select a Day to Display on the Map:",
-                                           min = min(dta$Date),
-                                           max = max(dta$Date),
-                                           value = max(dta$Date))
-                        
-                      ),
-                      
-                      # Plot ----
+                      # (3) Plot ----
                       wellPanel(
                         
                         sidebarLayout(
-                          sidebarPanel(
+                          sidebarPanel(width = 3,
                             
                             # _ Date range ----
                             shiny::dateRangeInput(inputId = "date_plot",
@@ -85,7 +98,7 @@ shinyApp(
                             
                           ),
                           
-                          mainPanel(
+                          mainPanel(width = 9,
                             
                             plotlyOutput("plot")
                             
@@ -93,7 +106,7 @@ shinyApp(
                         )
                       ),
                       
-                      # Table ----
+                      # (4) Table ----
                       wellPanel(
                         
                         DT::dataTableOutput("table")
@@ -104,54 +117,20 @@ shinyApp(
   
   server <- function(input, output, session) {
     
-    # Map ----
-    lake.GNISID <- reactive({
-      
-      unique(dta[which(dta$GNISIDNAME %in% input$waterbody),]$GNISID)
-      
-    })
-    
-    one.lake <- reactive({
-      
-      lakes[which(lakes@data$GNIS_ID == lake.GNISID()),]
-      
-    })
-    
-    bounds <- reactive({
-      
-      data.frame(bbox(one.lake()))
-      
-    })
-    
-    # _ map reactive @ waterbody picker ----
-    dta.test <- dta %>% 
-      dplyr::filter(Date %in%  c(as.Date("2020-09-20"),as.Date("2020-09-19"),as.Date("2020-07-08")))
-    date <- max(dta.test$Date)
-    
-    map.day <- lookup.date %>% 
-      dplyr::filter(Date %in%  date) %>% 
-      dplyr::mutate(map_day = paste0(Year.dta,Day.dta))
-    
-    tif.dir <- "//deqhq1/WQ-Share/Harmful Algal Blooms Coordination Team/GIS/cyan/2020/"
-    file.name.1 <- paste0(map.day$map_day,"_EPSG3857.tif")
-    
-    #r <- raster::readAll(raster(paste0(tif.dir,file.name.1)))
-    r <- raster::raster(paste0(tif.dir,file.name.1))
-    # crs(r) <- sp::CRS("+init=epsg:3857")
-    
-    pal.map <- colorNumeric(palette = c("#feb24c","#66c2a4","#67001f"), values(r), na.color = "transparent")
-    
+    # (1) Map ----
+    # _ initial map ----
     output$map <- leaflet::renderLeaflet({
       
       leaflet::leaflet() %>% 
         leaflet::addProviderTiles(providers$Esri.NatGeoWorldMap) %>% 
-        leaflet::fitBounds(lng1=bounds()$min[1], lat1=bounds()$min[2], lng2=bounds()$max[1], lat2=bounds()$max[2]) %>%
+        #leaflet::fitBounds(lng1=-125, lat1=47, lng2=116, lat2=42) %>%
+        leaflet::setView(lng = -121, lat = 44, zoom=7) %>%
         leaflet::addRasterImage(r, colors=pal.map, opacity = 1) %>% 
         leaflet::addLegend(pal = pal.map, values = values(r),title = "Cyanobacteria (cells/mL)") %>% 
         leaflet.extras::addResetMapButton() %>% 
         leaflet::addMiniMap(position = "bottomleft",
-                            width = 300,
-                            height = 300,
+                            width = 200,
+                            height = 200,
                             zoomLevelFixed = 5) %>% 
         leaflet::addPolygons(data = lakes, 
                              color = "blue",
@@ -164,6 +143,38 @@ shinyApp(
                              label = ~lakes$GNIS_Name)
       
     })
+    
+    
+    
+    # _ map reactive @ waterbody picker ----
+    
+    observeEvent(input$waterbody,{
+      
+      if(input$waterbody == c("Oregon")) {
+        
+        leafletProxy("map") %>% 
+          leaflet::setView(lng = -121, lat = 44, zoom=7)
+        
+      } else {
+        
+        one.lake <- reactive({
+          
+          lakes[which(lakes@data$Yuan == input$waterbody),]
+          
+        })
+        
+        bounds <- reactive({
+          
+          data.frame(bbox(one.lake()))
+          
+        })
+        
+        leafletProxy("map") %>% 
+          leaflet::fitBounds(lng1=bounds()$min[1], lat1=bounds()$min[2], lng2=bounds()$max[1], lat2=bounds()$max[2])
+      }
+      
+    })
+    
     
     # _ map reactive @ date slider ----
     observe({
@@ -182,7 +193,6 @@ shinyApp(
           
         })
         
-        # tif.dir <- "//deqhq1/WQ-Share/Harmful Algal Blooms Coordination Team/GIS/cyan/2020/"
         file.name.2 <- reactive(paste0(df.map.date()$map_day,"_EPSG3857.tif"))
         
         rst <- reactive({
@@ -223,7 +233,7 @@ shinyApp(
     })
     
     
-    # Plot ----
+    # (2) Plot ----
     pal.plot <- c("orange","blue","green","white","white","white")
     pal.plot <- setNames(pal.plot,unique(sort(dta$`Summary Statistics`)))
     
@@ -270,7 +280,7 @@ shinyApp(
       
     })
     
-    # Data table ----
+    # (3) Data table ----
     
     df_tbl <- reactive({
       
@@ -306,3 +316,4 @@ shinyApp(
     
   }
 )
+

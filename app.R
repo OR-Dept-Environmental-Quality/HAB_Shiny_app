@@ -159,7 +159,7 @@ shinyApp(
         
         one.lake <- reactive({
           
-          lakes[which(lakes@data$Yuan == input$waterbody),]
+          lakes[which(lakes@data$GNISIDNAME == input$waterbody),]
           
         })
         

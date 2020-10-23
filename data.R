@@ -92,22 +92,21 @@ lakes <- rgdal::readOGR(dsn = "./data/NHDwaterbody_resolvable_lakes.shp",
 # raster::crs(r)
 ## crs(r) <- CRS("+init=epsg:3857")
 
-dta.test <- dta %>% 
-  dplyr::filter(Date %in%  c(as.Date("2020-09-20"),as.Date("2020-09-19"),as.Date("2020-07-08")))
-date <- max(dta.test$Date)
+date <- max(dta$Date)
 
 map.day <- lookup.date %>% 
-  dplyr::filter(Date %in%  date) %>% 
+  dplyr::filter(Date == date) %>% 
   dplyr::mutate(map_day = paste0(Year.dta,Day.dta))
 
-tif.dir <- "//deqhq1/WQ-Share/Harmful Algal Blooms Coordination Team/GIS/cyan/2020/"
+tif.dir <- paste0("//deqhq1/WQ-Share/Harmful Algal Blooms Coordination Team/GIS/cyan/",map.day$Year.dta,"/mosaic/")
 # tif.dir <- "//deqhq1/WQ-Share/Harmful Algal Blooms Coordination Team/HAB_Shiny_app/data/tif/"
 # tif.dir <- "./data/tif/"
-file.name.1 <- paste0(map.day$map_day,"_EPSG3857.tif")
+file.name.1 <- paste0(map.day$map_day,".tif")
+#file.name.1 <- paste0(map.day$map_day)
 
 #r <- raster::readAll(raster(paste0(tif.dir,file.name.1)))
 r <- raster::raster(paste0(tif.dir,file.name.1))
-# crs(r) <- sp::CRS("+init=epsg:3857")
+#crs(r) <- sp::CRS("+init=epsg:9822")
 
 pal.map <- colorNumeric(palette = c("#feb24c","#66c2a4","#67001f"), values(r), na.color = "transparent")
 

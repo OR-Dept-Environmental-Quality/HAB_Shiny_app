@@ -58,7 +58,9 @@ shinyApp(
                                                          label = "Select a Day to Display on the Map:",
                                                          min = min(dta$Date),
                                                          max = max(dta$Date),
-                                                         value = max(dta$Date)))
+                                                         value = max(dta$Date)),
+                                      
+                                      tableOutput("values"))
                                     
                           )
                           
@@ -70,38 +72,38 @@ shinyApp(
                         
                         sidebarLayout(
                           sidebarPanel(width = 3,
-                            
-                            # _ Date range ----
-                            shiny::dateRangeInput(inputId = "date_plot",
-                                                  label = "Select Date Range to Plot:",
-                                                  start = min(dta$Date),
-                                                  end = max(dta$Date),
-                                                  min = min(dta$Date),
-                                                  max = max(dta$Date),
-                                                  separator = "to",
-                                                  format = "yyyy-mm-dd",
-                                                  startview = "year",
-                                                  weekstart = 0),
-                            
-                            # _ Summary Statistics ----
-                            checkboxGroupInput(inputId = "matrix",
-                                               label = "Summary Statistics:",
-                                               choices = c("Maximum" = "Maximum",
-                                                           "Mean" = "Mean",
-                                                           "Minimum" = "Minimum"),
-                                               selected = "Mean"),
-                            
-                            # _ Plot types ----
-                            checkboxGroupInput(inputId = "plot_log",
-                                               label = "See Log Scale:",
-                                               choices = c("Log Scale" = "log"))
-                            
+                                       
+                                       # _ Date range ----
+                                       shiny::dateRangeInput(inputId = "date_plot",
+                                                             label = "Select Date Range to Plot:",
+                                                             start = min(dta$Date),
+                                                             end = max(dta$Date),
+                                                             min = min(dta$Date),
+                                                             max = max(dta$Date),
+                                                             separator = "to",
+                                                             format = "yyyy-mm-dd",
+                                                             startview = "year",
+                                                             weekstart = 0),
+                                       
+                                       # _ Summary Statistics ----
+                                       checkboxGroupInput(inputId = "matrix",
+                                                          label = "Summary Statistics:",
+                                                          choices = c("Maximum" = "Maximum",
+                                                                      "Mean" = "Mean",
+                                                                      "Minimum" = "Minimum"),
+                                                          selected = "Mean"),
+                                       
+                                       # _ Plot types ----
+                                       checkboxGroupInput(inputId = "plot_log",
+                                                          label = "See Log Scale:",
+                                                          choices = c("Log Scale" = "log"))
+                                       
                           ),
                           
                           mainPanel(width = 9,
-                            
-                            plotlyOutput("plot")
-                            
+                                    
+                                    plotlyOutput("plot")
+                                    
                           )
                         )
                       ),
@@ -133,7 +135,7 @@ shinyApp(
                             height = 200,
                             zoomLevelFixed = 5) %>% 
         leaflet::addPolygons(data = lakes, 
-                             color = "blue",
+                             color = "red",
                              weight = 2,
                              layer = ~lakes$GNIS_Name,
                              smoothFactor = 0.5,
@@ -177,38 +179,57 @@ shinyApp(
     
     
     # _ map reactive @ date slider ----
-    observe({
+    
+    observeEvent(input$date_map,{
       
-      if(missing.dates$Date <- input$date_map) {
+      #if(missing.dates$Date %in% input$date_map) {
+      
+      #  return()
+      
+      #} else {
+      
+      df.map.date <- reactive({
         
-        return()
+        lookup.date %>% 
+          dplyr::filter(Date %in% input$date_map) %>% 
+          dplyr::mutate(map_day = paste0(Year.dta,Day.dta))
         
-      } else {
+      })
+      
+      map.tif.dir <- reactive(paste0("//deqhq1/WQ-Share/Harmful Algal Blooms Coordination Team/GIS/cyan/",df.map.date()$Year.dta,"/mosaic/"))
+      
+      file.name.2 <- reactive(paste0(df.map.date()$map_day,".tif"))
+      
+      rst <- reactive({
         
-        df.map.date <- reactive({
-          
-          lookup.date %>% 
-            dplyr::filter(Date == input$date_map) %>% 
-            dplyr::mutate(map_day = paste0(Year.dta,Day.dta))
-          
-        })
+        raster::raster(paste0(map.tif.dir(),file.name.2()))
         
-        file.name.2 <- reactive(paste0(df.map.date()$map_day,"_EPSG3857.tif"))
-        
-        rst <- reactive({
-          
-          raster::readAll(raster(paste0(tif.dir,file.name.2())))
-          
-        })
-        
-        # crs(rst) <- CRS("+init=epsg:3857")
-        
-        leafletProxy(mapId = "map", 
-                     data = rst())
-        
-      }
+      })
+      
+      # crs(rst) <- CRS("+init=epsg:3857")
+      
+      leafletProxy("map") %>% 
+        clearImages() %>% 
+        leaflet::addRasterImage(rst(), colors=pal.map, opacity = 1)
+      
       
     })
+    
+    #}
+    
+    sliderValues <- reactive({
+      
+      data.frame(
+        Name = c("input$date_map"),
+        Value = as.character(c(input$date_map)),
+        stringsAsFactors = FALSE)
+      
+    })
+    
+    output$values <- renderTable({
+      sliderValues()
+    })  
+    
     
     
     # _ click on the map ---- 
@@ -316,4 +337,3 @@ shinyApp(
     
   }
 )
-

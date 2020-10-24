@@ -1,9 +1,10 @@
 library(tidyverse)
 library(lubridate)
 library(readxl)
-# library(sp); library(sf)
 library(rgdal) 
 library(raster)
+library(leaflet)
+library(RColorBrewer)
 
 setwd("//deqhq1/WQ-Share/Harmful Algal Blooms Coordination Team/HAB_Shiny_app")
 
@@ -65,52 +66,17 @@ missing.dates <- lookup.date %>%
   dplyr::filter(is.na(Day.dta))
 
 # (3) Map: shapefile ----
-# _ Date @ GIS ----
-# lakes <- rgdal::readOGR(dsn = "//deqhq1/WQ-Share/Harmful Algal Blooms Coordination Team/GIS/cyan/NHDwaterbody_resolvable_lakes.shp",
-#                        layer = "NHDwaterbody_resolvable_lakes")
-
-# _ Date @ R ----
 lakes <- rgdal::readOGR(dsn = "./data/NHDwaterbody_resolvable_lakes.shp",
                         layer = "NHDwaterbody_resolvable_lakes")
 
-# head(lakes) or head(lakes@data)
-# summary(lakes)
-
-# lakes <- sp::spTransform(lakes,CRS("+proj=longlat +datum=WGS84"))
-
-# lakes <- sf::st_read(dsn = "//deqhq1/WQ-Share/Harmful Algal Blooms Coordination Team/GIS/cyan/NHDwaterbody_resolvable_lakes.shp",
-#                      layer = "NHDwaterbody_resolvable_lakes") %>% 
-#         sf::st_transform(crs = "+proj=longlat +datum=WGS84")
-
 # (4) Map: raster ----
-# Codes kept here for note only. The raster file is called at the app.R.
-# check if the r object is loaded into memory, run:
-# raster::inMemory(r)
-# if FALSE, to force the raster into memory use
-## r <- raster::readAll(raster("//deqhq1/WQ-Share/Harmful Algal Blooms Coordination Team/GIS/cyan/2020/2020190_EPSG3857.tif"))
-# r
-# raster::crs(r)
-## crs(r) <- CRS("+init=epsg:3857")
+# Raster color 
+thevalues <-c(6309.5,18000,43000,61500,84000,100000,130000,1000000)
 
-date <- max(dta$Date)
-
-map.day <- lookup.date %>% 
-  dplyr::filter(Date == date) %>% 
-  dplyr::mutate(map_day = paste0(Year.dta,Day.dta))
-
-tif.dir <- paste0("//deqhq1/WQ-Share/Harmful Algal Blooms Coordination Team/GIS/cyan/",map.day$Year.dta,"/mosaic/")
-# tif.dir <- "//deqhq1/WQ-Share/Harmful Algal Blooms Coordination Team/HAB_Shiny_app/data/tif/"
-# tif.dir <- "./data/tif/"
-file.name.1 <- paste0(map.day$map_day,".tif")
-#file.name.1 <- paste0(map.day$map_day)
-
-#r <- raster::readAll(raster(paste0(tif.dir,file.name.1)))
-r <- raster::raster(paste0(tif.dir,file.name.1))
-#crs(r) <- sp::CRS("+init=epsg:9822")
-
-pal.map <- colorNumeric(palette = c("#feb24c","#66c2a4","#67001f"), values(r), na.color = "transparent")
-
+pal.map <- leaflet::colorBin(palette = RColorBrewer::brewer.pal(7,"YlOrRd"),
+                             bins = c(6309.5,18000,43000,61500,84000,100000,130000,1000000),
+                             domain = c(6309.5,18000,43000,61500,84000,100000,130000,1000000),
+                             na.color = "transparent")
 # ----
 
 save.image(file = "data.RData")
-

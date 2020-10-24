@@ -1,13 +1,12 @@
 library(tidyverse)
-library(lubridate)
-library(plotly);library(ggplot2)
+library(plotly)
 library(shiny); library(shinythemes); library(shinyWidgets)
 library(leaflet); library(leaflet.extras)
 library(DT)
-library(viridis)
 library(scales)
-library(rgdal); library(raster); 
-library(sp);library(sf)
+library(rgdal)
+library(raster)
+library(sp)
 
 load("data.RData")
 
@@ -37,33 +36,31 @@ shinyApp(
                                                                    "Not-Within Drinking Water Source Area" = 
                                                                      unique(sort(dta[which(dta$wi_DWSA == c("No")),]$GNISIDNAME))
                                                                  ),
-                                                                 # selected = "Alkali Lake_01116863",
                                                                  multiple = FALSE)
-                                       
-                                       
                           ),
-                          
                           
                           mainPanel(width = 9,
                                     
                                     # (2) Map ----
                                     wellPanel(
+                                      style = "background: white",
                                       tags$style(type = "text/css", "#map {height: calc(80vh - 80px) !important;}"),
-                                      leaflet::leafletOutput("map", width="100%",height="100%")),
-                                    
+                                      leaflet::leafletOutput("map", width="100%",height="100%")
+                                    ),
                                     
                                     # _ Dates ----
                                     wellPanel(
+                                      style = "background: white",
                                       shiny::sliderInput(inputId = "date_map",
-                                                         label = "Select a Day to Display on the Map:",
+                                                         label = "Select a Date to Display on the Map:",
                                                          min = min(dta$Date),
                                                          max = max(dta$Date),
-                                                         value = max(dta$Date)),
+                                                         value = max(dta$Date),
+                                                         timeFormat = "%Y-%m"),
                                       
-                                      tableOutput("values"))
-                                    
+                                      tableOutput("values")
+                                    )     
                           )
-                          
                         )
                       ),
                       
@@ -71,6 +68,7 @@ shinyApp(
                       wellPanel(
                         
                         sidebarLayout(
+                          
                           sidebarPanel(width = 3,
                                        
                                        # _ Date range ----
@@ -97,12 +95,11 @@ shinyApp(
                                        checkboxGroupInput(inputId = "plot_log",
                                                           label = "See Log Scale:",
                                                           choices = c("Log Scale" = "log"))
-                                       
                           ),
                           
                           mainPanel(width = 9,
                                     
-                                    plotlyOutput("plot")
+                                    plotly::plotlyOutput("plot")
                                     
                           )
                         )
@@ -125,17 +122,14 @@ shinyApp(
       
       leaflet::leaflet() %>% 
         leaflet::addProviderTiles(providers$Esri.NatGeoWorldMap) %>% 
-        #leaflet::fitBounds(lng1=-125, lat1=47, lng2=116, lat2=42) %>%
         leaflet::setView(lng = -121, lat = 44, zoom=7) %>%
-        leaflet::addRasterImage(r, colors=pal.map, opacity = 1) %>% 
-        leaflet::addLegend(pal = pal.map, values = values(r),title = "Cyanobacteria (cells/mL)") %>% 
         leaflet.extras::addResetMapButton() %>% 
         leaflet::addMiniMap(position = "bottomleft",
                             width = 200,
                             height = 200,
                             zoomLevelFixed = 5) %>% 
         leaflet::addPolygons(data = lakes, 
-                             color = "red",
+                             color = "blue",
                              weight = 2,
                              layer = ~lakes$GNIS_Name,
                              smoothFactor = 0.5,
@@ -145,8 +139,6 @@ shinyApp(
                              label = ~lakes$GNIS_Name)
       
     })
-    
-    
     
     # _ map reactive @ waterbody picker ----
     
@@ -167,7 +159,7 @@ shinyApp(
         
         bounds <- reactive({
           
-          data.frame(bbox(one.lake()))
+          data.frame(sp::bbox(one.lake()))
           
         })
         
@@ -182,52 +174,62 @@ shinyApp(
     
     observeEvent(input$date_map,{
       
-      #if(missing.dates$Date %in% input$date_map) {
-      
-      #  return()
-      
-      #} else {
-      
       df.map.date <- reactive({
         
         lookup.date %>% 
-          dplyr::filter(Date %in% input$date_map) %>% 
+          dplyr::filter(Date %in% as.Date(input$date_map)) %>% 
           dplyr::mutate(map_day = paste0(Year.dta,Day.dta))
         
       })
       
-      map.tif.dir <- reactive(paste0("//deqhq1/WQ-Share/Harmful Algal Blooms Coordination Team/GIS/cyan/",df.map.date()$Year.dta,"/mosaic/"))
-      
-      file.name.2 <- reactive(paste0(df.map.date()$map_day,".tif"))
-      
-      rst <- reactive({
+      if(is.na(df.map.date()$Year.dta)){
         
-        raster::raster(paste0(map.tif.dir(),file.name.2()))
+        return(NULL)
         
-      })
-      
-      # crs(rst) <- CRS("+init=epsg:3857")
-      
-      leafletProxy("map") %>% 
-        clearImages() %>% 
-        leaflet::addRasterImage(rst(), colors=pal.map, opacity = 1)
-      
+      } else {
+        
+        map.tif.dir <- reactive(paste0("//deqhq1/WQ-Share/Harmful Algal Blooms Coordination Team/GIS/cyan/",df.map.date()$Year.dta,"/mosaic/"))
+        
+        file.name <- reactive(paste0(df.map.date()$map_day,".tif"))
+        
+        rst <- reactive({
+          
+          raster::raster(paste0(map.tif.dir(),file.name()))
+          
+        })
+        
+        leafletProxy("map") %>% 
+          leaflet::clearImages() %>% 
+          leaflet::clearControls() %>% 
+          leaflet::addRasterImage(rst(), colors=pal.map, opacity = 1) %>% 
+          leaflet::addLegend(pal = pal.map, values = thevalues, title = "Cyanobacteria (cells/mL)")
+        
+      } 
       
     })
     
-    #}
-    
     sliderValues <- reactive({
       
-      data.frame(
-        Name = c("input$date_map"),
-        Value = as.character(c(input$date_map)),
-        stringsAsFactors = FALSE)
+      df.map.date <- reactive({
+        
+        lookup.date %>% 
+          dplyr::filter(Date %in% as.Date(input$date_map)) %>% 
+          dplyr::mutate(map_day = paste0(Year.dta,Day.dta))
+        
+      })
+      
+      data.frame(Date = as.character(input$date_map),
+                 Raster = ifelse(is.na(df.map.date()$Year.dta),
+                                 "There is no raster data on the selected date.",
+                                 "Raster image is updated."),
+                 stringsAsFactors = FALSE)
       
     })
     
     output$values <- renderTable({
+      
       sliderValues()
+      
     })  
     
     
@@ -239,7 +241,7 @@ shinyApp(
       
       if(is.null(click)){
         
-        return()
+        return(NULL)
         
       } else {
         
@@ -331,8 +333,7 @@ shinyApp(
                        )),
         rownames = FALSE,
         filter = 'bottom'
-      ) #%>% 
-      #DT::formatDate("Date","toLocaleString")
+      )
     }, server = FALSE)
     
   }

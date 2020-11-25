@@ -1,117 +1,229 @@
+# devtools::install_github("RinteRface/shinydashboardPlus")
+
 library(tidyverse)
-library(plotly)
-library(shiny); library(shinythemes); library(shinyWidgets)
+library(shiny); library(shinythemes); library(shinyWidgets); 
+library(shinydashboard); library(shinydashboardPlus); library(shinyjs)
+library(raster); library(sp)
 library(leaflet); library(leaflet.extras)
-library(DT)
 library(scales)
-library(rgdal)
-library(raster)
-library(sp)
+library(plotly)
+library(DT)
 
 load("data.RData")
 
-rm(ui); rm(server)
-
-## app.R ----
+# APP ----
 shinyApp(
   
-  ui <- fluidPage(
+  ui = dashboardPage(
     
-    theme = shinythemes::shinytheme("flatly"),
-    shiny::navbarPage("Brian is Awesome! :-)",
-                      
-                      wellPanel(
-                        
-                        sidebarLayout(
-                          
-                          sidebarPanel(width = 3,
-                                       
-                                       # (1) Waterbody ----
-                                       shinyWidgets::pickerInput(inputId = "waterbody",
-                                                                 label = "Select a Waterbody:",
-                                                                 choices = list(
-                                                                   "Oregon",
-                                                                   "Within Drinking Water Source Area" = 
-                                                                     unique(sort(dta[which(dta$wi_DWSA == c("Yes")),]$GNISIDNAME)),
-                                                                   "Not-Within Drinking Water Source Area" = 
-                                                                     unique(sort(dta[which(dta$wi_DWSA == c("No")),]$GNISIDNAME))
-                                                                 ),
-                                                                 multiple = FALSE)
-                          ),
-                          
-                          mainPanel(width = 9,
+    options = list(sidebarExpandOnHover = FALSE),
+    
+    header = dashboardHeader(
+      
+      controlbarIcon = shiny::icon("info-circle", "fa-3x"),
+      
+      leftUi = tagList(
+        
+        tags$img(src = "DEQ-logo-horizontal-white370x74.png"),
+        tags$div(span("Oregon CyAN Image of Cyanobacteria Abundance",
+                      style = "color: white; font-size: 50px"))
+        
+      )
+      
+    ),
+    
+    sidebar = dashboardSidebar(disable = TRUE),
+    
+    body = dashboardBody(
+      
+      tags$head(tags$style(HTML('
+                                /* logo */
+                                .skin-blue .main-header .logo {
+                                background-color: #23769a;
+                                }
+
+                                /* logo when hovered */
+                                .skin-blue .main-header .logo:hover {
+                                background-color: #23769a;
+                                }
+
+                                /* navbar (rest of the header) */
+                                .skin-blue .main-header .navbar {
+                                background-color: #23769a;
+                                }
+
+                                /* main sidebar */
+                                .skin-blue .main-sidebar {
+                                background-color: #23769a;
+                                }
+                                
+                                .sidebar {
+                                color: #23769a;
+                                position: fixed;
+                                width: 1px;
+                                white-space: nowrap;
+                                overflow: visible;
+                                background-color: #23769a;
+                                }
+
+                                /* active selected tab in the sidebarmenu */
+                                .skin-blue .main-sidebar .sidebar .sidebar-menu .active a{
+                                background-color: white;
+                                }
+
+                                /* other links in the sidebarmenu */
+                                .skin-blue .main-sidebar .sidebar .sidebar-menu a{
+                                background-color: white;
+                                color: #000000;
+                                }
+
+                                /* other links in the sidebarmenu when hovered */
+                                .skin-blue .main-sidebar .sidebar .sidebar-menu a:hover{
+                                background-color: white;
+                                }
+                                /* toggle button when hovered  */
+                                .skin-blue .main-header .navbar .sidebar-toggle:hover{
+                                background-color: white;
+                                }
+
+                                /* body */
+                                .content-wrapper, .right-side {
+                                background-color: white;
+                                }
+                                '))),
+      
+      shinydashboardPlus::box(title = "Map",
+                              status = "primary",
+                              solidHeader = TRUE,
+                              width = 12,
+                              collapsible = TRUE,
+                              collapsed = FALSE,
+                              dropdownMenu = boxDropdown(),
+                              
+                              shinydashboard::box(width = 2,
+                                                  height = "700px",
+                                                  solidHeader = TRUE,
+                                                  
+                                                  # (1) Waterbody ----
+                                                  shinyWidgets::pickerInput(inputId = "waterbody",
+                                                                            label = tags$h4("Select a Waterbody:"),
+                                                                            choices = list(
+                                                                              "Oregon",
+                                                                              "Within Drinking Water Source Area" = 
+                                                                                unique(sort(dta[which(dta$wi_DWSA == c("Yes")),]$GNISIDNAME)),
+                                                                              "Not-Within Drinking Water Source Area" = 
+                                                                                unique(sort(dta[which(dta$wi_DWSA == c("No")),]$GNISIDNAME))
+                                                                            ),
+                                                                            # selected = "Alkali Lake_01116863",
+                                                                            multiple = FALSE),
+                                                  
+                                                  # _ Dates ----
+                                                  tags$style(HTML(".datepicker {z-index:99999 !important;}")),
+                                                  
+                                                  shiny::dateInput(inputId = "date_map",
+                                                                   label = tags$h4("Select a Date:"),
+                                                                   value = max(dta$Date),
+                                                                   min = min(dta$Date),
+                                                                   max = max(dta$Date),
+                                                                   format = "yyyy-mm-dd",
+                                                                   startview = "month",
+                                                                   weekstart = 0,
+                                                                   datesdisabled = missing.dates$Date),
+                                                  
+                                                  # tableOutput("values"),
+                                                  
+                                                  HTML(paste(
+                                                    tags$br(),
+                                                    tags$h4("Boxplot of Cyanobacteria Abundance:")
+                                                  )),
+                                                  
+                                                  plotlyOutput("boxplot")
+                                                  
+                              ),
+                              
+                              # (2) Map ----
+                              shinydashboard::box(width = 10,
+                                                  height = "700px",
+                                                  solidHeader = TRUE,
+
+                                                  # tags$style(type = "text/css", "#map {height: calc(80vh - 80px) !important;}"),
+                                                  leaflet::leafletOutput("map", height = "680px"))
+                              
+      ),
+      
+      # (3) Plot ----
+      shinydashboardPlus::box(title = "Plot",
+                              status = "warning",
+                              solidHeader = TRUE,
+                              width = 12,
+                              collapsible = TRUE,
+                              collapsed = FALSE,
+                              dropdownMenu = boxDropdown(),
+                              
+                              shinydashboard::box(width = 2,
+                                                  height = "400px",
+                                                  solidHeader = TRUE,
+
+                                                  # _ Date range ----
+                                                  shiny::dateRangeInput(inputId = "date_plot",
+                                                                        label = tags$h4("Select Date Range to Plot:"),
+                                                                        start = min(dta$Date),
+                                                                        end = max(dta$Date),
+                                                                        min = min(dta$Date),
+                                                                        max = max(dta$Date),
+                                                                        separator = "to",
+                                                                        format = "yyyy-mm-dd",
+                                                                        startview = "year",
+                                                                        weekstart = 0),
+                                                  
+                                                  # _ Summary Statistics ----
+                                                  checkboxGroupInput(inputId = "matrix",
+                                                                     label = tags$h4("Summary Statistics:"),
+                                                                     choices = c("Maximum" = "Maximum",
+                                                                                 "Mean" = "Mean",
+                                                                                 "Minimum" = "Minimum"),
+                                                                     selected = "Mean"),
+                                                  
+                                                  # _ Plot types ----
+                                                  checkboxGroupInput(inputId = "plot_log",
+                                                                     label = tags$h4("See Log Scale:"),
+                                                                     choices = c("Log Scale" = "log"))
+                                                  
+                              ),
+                              
+                              
+                              shinydashboard::box(width = 10,
+                                                  height = "400px",
+                                                  solidHeader = TRUE,
+                                                  
+                                                  plotlyOutput("plot")
+                                                  
+                              )
+                              
+      ),
+      
+      # (4) Table ----
+      shinydashboardPlus::box(title = "Table",
+                              status = "success",
+                              solidHeader = TRUE,
+                              width = 12,
+                              collapsible = TRUE,
+                              collapsed = FALSE,
+                              dropdownMenu = boxDropdown(),
+                              
+                              DT::dataTableOutput("table")
+                              
+                              )
+      
+      
+    ),
+    
+    controlbar = dashboardControlbar(width = 230,
+                                     overlay = FALSE,
+                                     skin = "light"),
                                     
-                                    # (2) Map ----
-                                    wellPanel(
-                                      style = "background: white",
-                                      tags$style(type = "text/css", "#map {height: calc(80vh - 80px) !important;}"),
-                                      leaflet::leafletOutput("map", width="100%",height="100%")
-                                    ),
-                                    
-                                    # _ Dates ----
-                                    wellPanel(
-                                      style = "background: white",
-                                      shiny::sliderInput(inputId = "date_map",
-                                                         label = "Select a Date to Display on the Map:",
-                                                         min = min(dta$Date),
-                                                         max = max(dta$Date),
-                                                         value = max(dta$Date),
-                                                         timeFormat = "%Y-%m"),
-                                      
-                                      tableOutput("values")
-                                    )     
-                          )
-                        )
-                      ),
-                      
-                      # (3) Plot ----
-                      wellPanel(
-                        
-                        sidebarLayout(
-                          
-                          sidebarPanel(width = 3,
-                                       
-                                       # _ Date range ----
-                                       shiny::dateRangeInput(inputId = "date_plot",
-                                                             label = "Select Date Range to Plot:",
-                                                             start = min(dta$Date),
-                                                             end = max(dta$Date),
-                                                             min = min(dta$Date),
-                                                             max = max(dta$Date),
-                                                             separator = "to",
-                                                             format = "yyyy-mm-dd",
-                                                             startview = "year",
-                                                             weekstart = 0),
-                                       
-                                       # _ Summary Statistics ----
-                                       checkboxGroupInput(inputId = "matrix",
-                                                          label = "Summary Statistics:",
-                                                          choices = c("Maximum" = "Maximum",
-                                                                      "Mean" = "Mean",
-                                                                      "Minimum" = "Minimum"),
-                                                          selected = "Mean"),
-                                       
-                                       # _ Plot types ----
-                                       checkboxGroupInput(inputId = "plot_log",
-                                                          label = "See Log Scale:",
-                                                          choices = c("Log Scale" = "log"))
-                          ),
-                          
-                          mainPanel(width = 9,
-                                    
-                                    plotly::plotlyOutput("plot")
-                                    
-                          )
-                        )
-                      ),
-                      
-                      # (4) Table ----
-                      wellPanel(
-                        
-                        DT::dataTableOutput("table")
-                        
-                      )           
-    )
+    title = "DashboardPage"
+    
   ),
   
   server <- function(input, output, session) {
@@ -159,7 +271,7 @@ shinyApp(
         
         bounds <- reactive({
           
-          data.frame(sp::bbox(one.lake()))
+          data.frame(bbox(one.lake()))
           
         })
         
@@ -170,7 +282,7 @@ shinyApp(
     })
     
     
-    # _ map reactive @ date slider ----
+    # _ map reactive @ date selector ----
     
     observeEvent(input$date_map,{
       
@@ -188,7 +300,7 @@ shinyApp(
         
       } else {
         
-        map.tif.dir <- reactive(paste0("//deqhq1/WQ-Share/Harmful Algal Blooms Coordination Team/GIS/cyan/",df.map.date()$Year.dta,"/mosaic/"))
+        map.tif.dir <- reactive(paste0("data/", df.map.date()$Year.dta, "/"))
         
         file.name <- reactive(paste0(df.map.date()$map_day,".tif"))
         
@@ -201,7 +313,7 @@ shinyApp(
         leafletProxy("map") %>% 
           leaflet::clearImages() %>% 
           leaflet::clearControls() %>% 
-          leaflet::addRasterImage(rst(), colors=pal.map, opacity = 1) %>% 
+          leaflet::addRasterImage(rst(), project = FALSE, colors=pal.map, opacity = 1) %>% 
           leaflet::addLegend(pal = pal.map, values = thevalues, title = "Cyanobacteria (cells/mL)")
         
       } 
@@ -218,18 +330,16 @@ shinyApp(
         
       })
       
-      data.frame(Date = as.character(input$date_map),
-                 Raster = ifelse(is.na(df.map.date()$Year.dta),
-                                 "There is no raster data on the selected date.",
-                                 "Raster image is updated."),
+      data.frame(`Note:` = ifelse(is.na(df.map.date()$Year.dta),
+                                  "There is no raster data on the selected date:",
+                                  "Raster image is updated for"),
+                 Date = as.character(input$date_map),
                  stringsAsFactors = FALSE)
       
     })
     
     output$values <- renderTable({
-      
       sliderValues()
-      
     })  
     
     
@@ -256,7 +366,44 @@ shinyApp(
     })
     
     
-    # (2) Plot ----
+    # (2) Plots ----
+    
+    # _ Boxplot ----
+    
+    df.box <- reactive({
+      
+      dta %>% 
+        dplyr::filter(GNISIDNAME %in% input$waterbody) %>%
+        dplyr::filter(Date %in% input$date_map)
+      
+    })
+
+    output$boxplot <- renderPlotly({
+      
+      plotly::plot_ly(data = df.box(),
+                      x = ~as.Date(Date, format= "%Y-%m-%d"),
+                      y = ~`Cyanobacteria (cells/mL)`,
+                      type = "box",
+                      name = unique(df.box()$GNISIDNAME)) %>% 
+        add_trace(y = 100000) %>% 
+        plotly::layout(xaxis = list(title = ""),
+                       yaxis = list(title = "Cyanobacteria (cells/mL)",
+                                    type = "log"),
+                       showlegend = FALSE,
+                       annotations = list(x = as.Date(df.box()$Date),
+                                          y = 100000,
+                                          text = "WHO Thresholds",
+                                          xref = "x",
+                                          yref = "y",
+                                          showarrow = TRUE,
+                                          arrowhead = 7,
+                                          ax = 20,
+                                          ay = -40
+                       ))
+      
+    })
+    
+    # _ Time series plot ----
     pal.plot <- c("orange","blue","green","white","white","white")
     pal.plot <- setNames(pal.plot,unique(sort(dta$`Summary Statistics`)))
     
@@ -333,7 +480,8 @@ shinyApp(
                        )),
         rownames = FALSE,
         filter = 'bottom'
-      )
+      ) #%>% 
+      #DT::formatDate("Date","toLocaleString")
     }, server = FALSE)
     
   }

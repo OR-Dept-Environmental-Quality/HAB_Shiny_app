@@ -12,28 +12,28 @@ setwd("//deqhq1/WQ-Share/Harmful Algal Blooms Coordination Team/HAB_Shiny_app")
 # Note: Date @ R was used to deploy the app at shinyapps.io; however, this app is too large to use in a free shinyapps.io site.
 
 # _ Data @ GIS ----
-dta1 <- readxl::read_xlsx("//deqhq1/WQ-Share/Harmful Algal Blooms Coordination Team/GIS/cyan/tables/HAB_resolvablelakes_2016_to_2019.xlsx",
-                          sheet = "HAB_resolvablelakes_2016_2020") %>% 
-  dplyr::mutate(wi_DWSA = NA)
-
-dta2 <- readxl::read_xlsx("//deqhq1/WQ-Share/Harmful Algal Blooms Coordination Team/GIS/cyan/tables/HAB_resolvablelakes_toAug262020.xlsx",
-                          sheet = "HAB_resolvable_toAug262020") %>% 
-  dplyr::select(-"...13")
-
-dta3 <- readxl::read_xlsx("//deqhq1/WQ-Share/Harmful Algal Blooms Coordination Team/GIS/cyan/tables/HAB_resolvablelakes_toAug262020.xlsx",
-                          sheet = "NHDWaterbody_resolvable_inDWSA")
-
-# _ Date @ R ----
-#dta1 <- readxl::read_xlsx("./data/HAB_resolvablelakes_2016_to_2019.xlsx",
+#dta1 <- readxl::read_xlsx("//deqhq1/WQ-Share/Harmful Algal Blooms Coordination Team/GIS/cyan/tables/HAB_resolvablelakes_2016_to_2019.xlsx",
 #                          sheet = "HAB_resolvablelakes_2016_2020") %>% 
 #  dplyr::mutate(wi_DWSA = NA)
 
-#dta2 <- readxl::read_xlsx("./data/HAB_resolvablelakes_toAug262020.xlsx",
-#                         sheet = "HAB_resolvable_toAug262020") %>% 
+#dta2 <- readxl::read_xlsx("//deqhq1/WQ-Share/Harmful Algal Blooms Coordination Team/GIS/cyan/tables/HAB_resolvablelakes_toAug262020.xlsx",
+#                          sheet = "HAB_resolvable_toAug262020") %>% 
 #  dplyr::select(-"...13")
 
-#dta3 <- readxl::read_xlsx("./data/HAB_resolvablelakes_toAug262020.xlsx",
+#dta3 <- readxl::read_xlsx("//deqhq1/WQ-Share/Harmful Algal Blooms Coordination Team/GIS/cyan/tables/HAB_resolvablelakes_toAug262020.xlsx",
 #                          sheet = "NHDWaterbody_resolvable_inDWSA")
+
+# _ Date @ R ----
+dta1 <- readxl::read_xlsx("./data/HAB_resolvablelakes_2016_to_2019.xlsx",
+                         sheet = "HAB_resolvablelakes_2016_2020") %>% 
+  dplyr::mutate(wi_DWSA = NA)
+
+dta2 <- readxl::read_xlsx("./data/HAB_resolvablelakes_2020.xlsx",
+                         sheet = "HAB_resolvable_toAug262020") %>% 
+  dplyr::select(-"...13")
+
+dta3 <- readxl::read_xlsx("./data/HAB_resolvablelakes_2020.xlsx",
+                          sheet = "NHDWaterbody_resolvable_inDWSA")
 
 GNISNameID <- unique(sort(dta3$GNIS_Name_ID...1))
 
@@ -78,5 +78,5 @@ pal.map <- leaflet::colorBin(palette = RColorBrewer::brewer.pal(7,"YlOrRd"),
                              domain = c(6309.5,18000,43000,61500,84000,100000,130000,1000000),
                              na.color = "transparent")
 # ----
-
+# rm(dta1); rm(dta2); rm(dta3)
 save.image(file = "data.RData")

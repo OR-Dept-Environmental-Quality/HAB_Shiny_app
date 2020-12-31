@@ -145,7 +145,7 @@ shinyApp(
                               shinydashboard::box(width = 10,
                                                   height = "700px",
                                                   solidHeader = TRUE,
-
+                                                  
                                                   # tags$style(type = "text/css", "#map {height: calc(80vh - 80px) !important;}"),
                                                   leaflet::leafletOutput("map", height = "680px"))
                               
@@ -163,7 +163,7 @@ shinyApp(
                               shinydashboard::box(width = 2,
                                                   height = "400px",
                                                   solidHeader = TRUE,
-
+                                                  
                                                   # _ Date range ----
                                                   shiny::dateRangeInput(inputId = "date_plot",
                                                                         label = tags$h4("Select Date Range to Plot:"),
@@ -213,15 +213,13 @@ shinyApp(
                               
                               DT::dataTableOutput("table")
                               
-                              )
-      
-      
+      )
     ),
     
     controlbar = dashboardControlbar(width = 230,
                                      overlay = FALSE,
                                      skin = "light"),
-                                    
+    
     title = "DashboardPage"
     
   ),
@@ -377,7 +375,7 @@ shinyApp(
         dplyr::filter(Date %in% input$date_map)
       
     })
-
+    
     output$boxplot <- renderPlotly({
       
       plotly::plot_ly(data = df.box(),

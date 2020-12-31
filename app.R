@@ -1,40 +1,28 @@
-# devtools::install_github("RinteRface/shinydashboardPlus")
-
 library(tidyverse)
-library(shiny); library(shinythemes); library(shinyWidgets); 
-library(shinydashboard); library(shinydashboardPlus); library(shinyjs)
-library(raster); library(sp)
-library(leaflet); library(leaflet.extras)
+library(shiny);library(shinyWidgets);library(shinythemes)
+library(shinydashboard);library(shinydashboardPlus);library(shinyjs)
+library(raster);library(sp)
+library(leaflet);library(leaflet.extras)
 library(scales)
 library(plotly)
 library(DT)
 
 load("data.RData")
 
-# APP ----
+# Shiny App ----
+
 shinyApp(
   
   ui = dashboardPage(
     
-    options = list(sidebarExpandOnHover = FALSE),
+    dashboardHeader(disable = TRUE),
     
-    header = dashboardHeader(
-      
-      controlbarIcon = shiny::icon("info-circle", "fa-3x"),
-      
-      leftUi = tagList(
-        
-        tags$img(src = "DEQ-logo-horizontal-white370x74.png"),
-        tags$div(span("Oregon CyAN Image of Cyanobacteria Abundance",
-                      style = "color: white; font-size: 50px"))
-        
-      )
-      
-    ),
+    # _ Siderbar ----
+    dashboardSidebar(collapsed = TRUE,
+                     width = 500),
     
-    sidebar = dashboardSidebar(disable = TRUE),
-    
-    body = dashboardBody(
+    # _ Body ----
+    dashboardBody(
       
       tags$head(tags$style(HTML('
                                 /* logo */
@@ -92,139 +80,173 @@ shinyApp(
                                 }
                                 '))),
       
-      shinydashboardPlus::box(title = "Map",
-                              status = "primary",
+      fluidRow(
+        
+        # __ Header ----
+        shinydashboardPlus::box(
+          width = 12,
+          tags$script(HTML("$('.box').eq(0).css('border', '0px solid white');")),
+          tags$head(tags$style(HTML('.box{-webkit-box-shadow: none; -moz-box-shadow: none;box-shadow: none;}'))),
+          #shinyjs::useShinyjs(),
+          #div(style="display: inline-block;vertical-align:top; width: 20px;",HTML("<br>")),
+          tags$img(src = "DEQ-logo-color-horizontal370x73.png"),
+          
+          tags$div(span("Oregon CyAN Image of Cyanobacteria Abundance",
+                        #style = "color: black; font-size: 50px; margin-left: 20px")),
+                        style = "color: black; font-size: 50px")),
+          
+          tags$br(),
+          shinyjs::useShinyjs(),
+          #div(style="display: inline-block;vertical-align:top; width: 20px;",HTML("<br>")),
+          div(style="display: inline-block;vertical-align:top; height:20px; width: 300px;",h4("Show Introduction and User Guide:")),
+          div(style="display: inline-block;vertical-align:top; height:50px; width: 150px;",shinyWidgets::switchInput(inputId = "sidebarSwitch",size = "small"))
+        ),
+        
+        shinydashboardPlus::box(
+          title = "Map",
+          status = "primary",
+          solidHeader = TRUE,
+          width = 12,
+          collapsible = TRUE,
+          collapsed = FALSE,
+          dropdownMenu = boxDropdown(),
+          
+          shinydashboard::box(width = 2,
+                              height = "700px",
                               solidHeader = TRUE,
-                              width = 12,
-                              collapsible = TRUE,
-                              collapsed = FALSE,
-                              dropdownMenu = boxDropdown(),
                               
-                              shinydashboard::box(width = 2,
-                                                  height = "700px",
-                                                  solidHeader = TRUE,
-                                                  
-                                                  # (1) Waterbody ----
-                                                  shinyWidgets::pickerInput(inputId = "waterbody",
-                                                                            label = tags$h4("Select a Waterbody:"),
-                                                                            choices = list(
-                                                                              "Oregon",
-                                                                              "Within Drinking Water Source Area" = 
-                                                                                unique(sort(dta[which(dta$wi_DWSA == c("Yes")),]$GNISIDNAME)),
-                                                                              "Not-Within Drinking Water Source Area" = 
-                                                                                unique(sort(dta[which(dta$wi_DWSA == c("No")),]$GNISIDNAME))
-                                                                            ),
-                                                                            # selected = "Alkali Lake_01116863",
-                                                                            multiple = FALSE),
-                                                  
-                                                  # _ Dates ----
-                                                  tags$style(HTML(".datepicker {z-index:99999 !important;}")),
-                                                  
-                                                  shiny::dateInput(inputId = "date_map",
-                                                                   label = tags$h4("Select a Date:"),
-                                                                   value = max(dta$Date),
-                                                                   min = min(dta$Date),
-                                                                   max = max(dta$Date),
-                                                                   format = "yyyy-mm-dd",
-                                                                   startview = "month",
-                                                                   weekstart = 0,
-                                                                   datesdisabled = missing.dates$Date),
-                                                  
-                                                  # tableOutput("values"),
-                                                  
-                                                  HTML(paste(
-                                                    tags$br(),
-                                                    tags$h4("Boxplot of Cyanobacteria Abundance:")
-                                                  )),
-                                                  
-                                                  plotlyOutput("boxplot")
-                                                  
-                              ),
+                              # __ (1) Waterbody ----
+                              shinyWidgets::pickerInput(inputId = "waterbody",
+                                                        label = tags$h4("Select a Waterbody:"),
+                                                        choices = list(
+                                                          "Oregon",
+                                                          "Within Drinking Water Source Area" = 
+                                                            unique(sort(dta[which(dta$wi_DWSA == c("Yes")),]$GNISIDNAME)),
+                                                          "Not-Within Drinking Water Source Area" = 
+                                                            unique(sort(dta[which(dta$wi_DWSA == c("No")),]$GNISIDNAME))
+                                                        ),
+                                                        # selected = "Alkali Lake_01116863",
+                                                        multiple = FALSE),
                               
-                              # (2) Map ----
-                              shinydashboard::box(width = 10,
-                                                  height = "700px",
-                                                  solidHeader = TRUE,
-                                                  
-                                                  # tags$style(type = "text/css", "#map {height: calc(80vh - 80px) !important;}"),
-                                                  leaflet::leafletOutput("map", height = "680px"))
+                              # __ (2) Dates ----
+                              tags$style(HTML(".datepicker {z-index:99999 !important;}")),
                               
-      ),
-      
-      # (3) Plot ----
-      shinydashboardPlus::box(title = "Plot",
-                              status = "warning",
+                              shiny::dateInput(inputId = "date_map",
+                                               label = tags$h4("Select a Date:"),
+                                               value = max(dta$Date),
+                                               min = min(dta$Date),
+                                               max = max(dta$Date),
+                                               format = "yyyy-mm-dd",
+                                               startview = "month",
+                                               weekstart = 0,
+                                               datesdisabled = missing.dates$Date),
+                              
+                              # tableOutput("values"),
+                              
+                              HTML(paste(
+                                tags$br(),
+                                tags$h4("Boxplot of Cyanobacteria Abundance:")
+                              )),
+                              
+                              plotlyOutput("boxplot")
+                              
+          ),
+          
+          # __ (3) Map ----
+          shinydashboard::box(width = 10,
+                              height = "700px",
                               solidHeader = TRUE,
-                              width = 12,
-                              collapsible = TRUE,
-                              collapsed = FALSE,
-                              dropdownMenu = boxDropdown(),
                               
-                              shinydashboard::box(width = 2,
-                                                  height = "400px",
-                                                  solidHeader = TRUE,
-                                                  
-                                                  # _ Date range ----
-                                                  shiny::dateRangeInput(inputId = "date_plot",
-                                                                        label = tags$h4("Select Date Range to Plot:"),
-                                                                        start = min(dta$Date),
-                                                                        end = max(dta$Date),
-                                                                        min = min(dta$Date),
-                                                                        max = max(dta$Date),
-                                                                        separator = "to",
-                                                                        format = "yyyy-mm-dd",
-                                                                        startview = "year",
-                                                                        weekstart = 0),
-                                                  
-                                                  # _ Summary Statistics ----
-                                                  checkboxGroupInput(inputId = "matrix",
-                                                                     label = tags$h4("Summary Statistics:"),
-                                                                     choices = c("Maximum" = "Maximum",
-                                                                                 "Mean" = "Mean",
-                                                                                 "Minimum" = "Minimum"),
-                                                                     selected = "Mean"),
-                                                  
-                                                  # _ Plot types ----
-                                                  checkboxGroupInput(inputId = "plot_log",
-                                                                     label = tags$h4("See Log Scale:"),
-                                                                     choices = c("Log Scale" = "log"))
-                                                  
-                              ),
-                              
-                              
-                              shinydashboard::box(width = 10,
-                                                  height = "400px",
-                                                  solidHeader = TRUE,
-                                                  
-                                                  plotlyOutput("plot")
-                                                  
-                              )
-                              
-      ),
-      
-      # (4) Table ----
-      shinydashboardPlus::box(title = "Table",
-                              status = "success",
-                              solidHeader = TRUE,
-                              width = 12,
-                              collapsible = TRUE,
-                              collapsed = FALSE,
-                              dropdownMenu = boxDropdown(),
-                              
-                              DT::dataTableOutput("table")
-                              
+                              # tags$style(type = "text/css", "#map {height: calc(80vh - 80px) !important;}"),
+                              leaflet::leafletOutput("map", height = "680px"))
+          
+        ),
+        
+        # __ (4) Plot ----
+        shinydashboardPlus::box(
+          title = "Plot",
+          status = "warning",
+          solidHeader = TRUE,
+          width = 12,
+          collapsible = TRUE,
+          collapsed = FALSE,
+          dropdownMenu = boxDropdown(),
+          
+          shinydashboard::box(
+            width = 2,
+            height = "400px",
+            solidHeader = TRUE,
+            
+            # __ (4.1) Date range ----
+            shiny::dateRangeInput(inputId = "date_plot",
+                                  label = tags$h4("Select Date Range to Plot:"),
+                                  start = min(dta$Date),
+                                  end = max(dta$Date),
+                                  min = min(dta$Date),
+                                  max = max(dta$Date),
+                                  separator = "to",
+                                  format = "yyyy-mm-dd",
+                                  startview = "year",
+                                  weekstart = 0),
+            
+            # __ (4.2) Summary Statistics ----
+            checkboxGroupInput(inputId = "matrix",
+                               label = tags$h4("Summary Statistics:"),
+                               choices = c("Maximum" = "Maximum",
+                                           "Mean" = "Mean",
+                                           "Minimum" = "Minimum"),
+                               selected = "Mean"),
+            
+            # __ (4.3) Plot types ----
+            checkboxGroupInput(inputId = "plot_log",
+                               label = tags$h4("See Log Scale:"),
+                               choices = c("Log Scale" = "log"))
+            
+          ),
+          
+          
+          shinydashboard::box(
+            width = 10,
+            height = "400px",
+            solidHeader = TRUE,
+            
+            plotlyOutput("plot")
+            
+          )
+          
+        ),
+        
+        # __ (5) Table ----
+        shinydashboardPlus::box(
+          title = "Table",
+          status = "success",
+          solidHeader = TRUE,
+          width = 12,
+          collapsible = TRUE,
+          collapsed = FALSE,
+          dropdownMenu = boxDropdown(),
+          
+          DT::dataTableOutput("table")
+          
+        )
       )
-    ),
-    
-    controlbar = dashboardControlbar(width = 230,
-                                     overlay = FALSE,
-                                     skin = "light"),
-    
-    title = "DashboardPage"
-    
+    )
   ),
   
-  server <- function(input, output, session) {
+  server = function(input, output, session) {
+    
+    # Sidebar switch ----
+    observeEvent(input$sidebarSwitch,{
+      
+      if(input$sidebarSwitch==TRUE) {
+        shinyjs::removeClass(selector = "body", class = "sidebar-collapse")
+      } else {
+        shinyjs::addClass(selector = "body", class = "sidebar-collapse")
+      }
+      
+    })
+    
+    
     
     # (1) Map ----
     # _ initial map ----

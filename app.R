@@ -82,19 +82,20 @@ shinyApp(
       
       fluidRow(
         
-        # __ Header ----
-        shinydashboardPlus::box(
+        tags$head(tags$style(HTML('.box{-webkit-box-shadow: none; -moz-box-shadow: none;box-shadow: none;}'))),
+        
+        # __ 1. Header ----
+        shinydashboard::box(
           width = 12,
-          tags$script(HTML("$('.box').eq(0).css('border', '0px solid white');")),
-          tags$head(tags$style(HTML('.box{-webkit-box-shadow: none; -moz-box-shadow: none;box-shadow: none;}'))),
+          solidHeader = TRUE,
+          
+          #tags$script(HTML("$('.box').eq(0).css('border', '0px solid white');")),
           #shinyjs::useShinyjs(),
           #div(style="display: inline-block;vertical-align:top; width: 20px;",HTML("<br>")),
           tags$img(src = "DEQ-logo-color-horizontal370x73.png"),
-          
           tags$div(span("Oregon CyAN Image of Cyanobacteria Abundance",
                         #style = "color: black; font-size: 50px; margin-left: 20px")),
                         style = "color: black; font-size: 50px")),
-          
           tags$br(),
           shinyjs::useShinyjs(),
           #div(style="display: inline-block;vertical-align:top; width: 20px;",HTML("<br>")),
@@ -102,6 +103,7 @@ shinyApp(
           div(style="display: inline-block;vertical-align:top; height:50px; width: 150px;",shinyWidgets::switchInput(inputId = "sidebarSwitch",size = "small"))
         ),
         
+        # __ 2. Map ----
         shinydashboardPlus::box(
           title = "Map",
           status = "primary",
@@ -115,7 +117,7 @@ shinyApp(
                               height = "700px",
                               solidHeader = TRUE,
                               
-                              # __ (1) Waterbody ----
+                              # ___ (.1) Waterbody ----
                               shinyWidgets::pickerInput(inputId = "waterbody",
                                                         label = tags$h4("Select a Waterbody:"),
                                                         choices = list(
@@ -128,7 +130,7 @@ shinyApp(
                                                         # selected = "Alkali Lake_01116863",
                                                         multiple = FALSE),
                               
-                              # __ (2) Dates ----
+                              # ___ (.2) Dates ----
                               tags$style(HTML(".datepicker {z-index:99999 !important;}")),
                               
                               shiny::dateInput(inputId = "date_map",
@@ -143,16 +145,18 @@ shinyApp(
                               
                               # tableOutput("values"),
                               
+                              # ___ (.3) Boxplot ----
+                              
                               HTML(paste(
-                                tags$br(),
-                                tags$h4("Boxplot of Cyanobacteria Abundance:")
+                                #tags$br(),
+                                tags$h4("Cyanobacteria abundance of the selected waterbody on the selected date\n(cell/mL):")
                               )),
                               
                               plotlyOutput("boxplot")
                               
           ),
           
-          # __ (3) Map ----
+          # ___ (.4) Map ----
           shinydashboard::box(width = 10,
                               height = "700px",
                               solidHeader = TRUE,
@@ -162,7 +166,7 @@ shinyApp(
           
         ),
         
-        # __ (4) Plot ----
+        # __ 3. Plot ----
         shinydashboardPlus::box(
           title = "Plot",
           status = "warning",
@@ -177,7 +181,7 @@ shinyApp(
             height = "400px",
             solidHeader = TRUE,
             
-            # __ (4.1) Date range ----
+            # ___ (.1) Date range ----
             shiny::dateRangeInput(inputId = "date_plot",
                                   label = tags$h4("Select Date Range to Plot:"),
                                   start = min(dta$Date),
@@ -189,7 +193,7 @@ shinyApp(
                                   startview = "year",
                                   weekstart = 0),
             
-            # __ (4.2) Summary Statistics ----
+            # ___ (.2) Summary Statistics ----
             checkboxGroupInput(inputId = "matrix",
                                label = tags$h4("Summary Statistics:"),
                                choices = c("Maximum" = "Maximum",
@@ -197,14 +201,14 @@ shinyApp(
                                            "Minimum" = "Minimum"),
                                selected = "Mean"),
             
-            # __ (4.3) Plot types ----
+            # ___ (.3) Plot types ----
             checkboxGroupInput(inputId = "plot_log",
                                label = tags$h4("See Log Scale:"),
                                choices = c("Log Scale" = "log"))
             
           ),
           
-          
+          # ___ (.4) Plot ----
           shinydashboard::box(
             width = 10,
             height = "400px",
@@ -216,7 +220,7 @@ shinyApp(
           
         ),
         
-        # __ (5) Table ----
+        # __ 4. Table ----
         shinydashboardPlus::box(
           title = "Table",
           status = "success",
@@ -389,7 +393,6 @@ shinyApp(
     # (2) Plots ----
     
     # _ Boxplot ----
-    
     df.box <- reactive({
       
       dta %>% 
@@ -405,21 +408,31 @@ shinyApp(
                       y = ~`Cyanobacteria (cells/mL)`,
                       type = "box",
                       name = unique(df.box()$GNISIDNAME)) %>% 
-        add_trace(y = 100000) %>% 
-        plotly::layout(xaxis = list(title = ""),
-                       yaxis = list(title = "Cyanobacteria (cells/mL)",
-                                    type = "log"),
+        add_trace(x = input$date_map,
+                  y = 100000) %>% 
+        plotly::layout(xaxis = list(title = "",
+                                    zeroline = FALSE,
+                                    showline = FALSE,
+                                    showticklabels = FALSE,
+                                    showgrid = FALSE),
+                       yaxis = list(type = "log",
+                         title = "",
+                         zeroline = TRUE,
+                         showline = TRUE,
+                         showticklabels = TRUE,
+                         showgrid = FALSE),
                        showlegend = FALSE,
-                       annotations = list(x = as.Date(df.box()$Date),
-                                          y = 100000,
-                                          text = "WHO Thresholds",
+                       annotations = list(x = input$date_map,
+                                          y = log(100000)/log(10),
+                                          #y = 100000,
+                                          text = "WHO Thresholds\n(100,000)",
                                           xref = "x",
                                           yref = "y",
                                           showarrow = TRUE,
-                                          arrowhead = 7,
-                                          ax = 20,
-                                          ay = -40
-                       ))
+                                          arrowhead = 3,
+                                          arrowsize = 1,
+                                          ax = 40,
+                                          ay = 50))
       
     })
     

@@ -6,236 +6,295 @@ library(leaflet);library(leaflet.extras)
 library(scales)
 library(plotly)
 library(DT)
+library(lubridate)
 
 load("data.RData")
 
 # Shiny App ----
-
 shinyApp(
-  
   ui = dashboardPage(
+    options = list(sidebarExpandOnHover = TRUE),
+    header = dashboardHeader(titleWidth = 400),
     
-    dashboardHeader(disable = TRUE),
-    
-    # _ Siderbar ----
-    dashboardSidebar(collapsed = TRUE,
-                     width = 500),
-    
-    # _ Body ----
-    dashboardBody(
+    # Sidebar ----
+    sidebar = dashboardSidebar(
+      minified = TRUE, collapsed = TRUE, width = 400,
       
-      tags$head(tags$style(HTML('
-                                /* logo */
-                                .skin-blue .main-header .logo {
-                                background-color: #23769a;
-                                }
+      sidebarMenu(
+        menuItem("About", icon = icon("info-circle"),
+                 menuSubItem(h4(HTML("
+                 This web application provides an interactive<br/>
+                 map to view satellite derived data on<br/>
+                 cyanobacteria harmful algal blooms in<br/>
+                 freshwater ecosystems of Oregon. Satellite<br/>
+                 data come from the US EPA CyAN project<br/>
+                 and are updated on a regular basis.")))),
+        menuItem("User Guide", icon = icon("cogs"),
+                 menuSubItem(h5(HTML("
+                 12345678911121314151617181912021222324252628<br/>
+                 12345678911121314151617181912021222324252628<br/>
+                                     12345678911121314151617181912021222324252628<br/>
+                                     12345678911121314151617181912021222324252628")))),
+        menuItem("Contact", icon = icon("envelope"),
+                 menuSubItem(h5(HTML("
+                 For more information on the Oregon HABs Map<br/>
+                 Application Project, please contact<br/>
+                 <br/>
+                 Dan Sobota, Project Manager<br/>
+                 Daniel.Sobota@deq.state.or.us
+                                     "))))
+      ) # sidebarMenu END
+    ), # dashboardSidebar END
+    
+    # Body ----
+    body = dashboardBody(
+      
+      tags$head(
+        tags$style(HTML('/* logo */
+                         .skin-blue .main-header .logo {
+                         background-color: #23769a;
+                         }
 
-                                /* logo when hovered */
-                                .skin-blue .main-header .logo:hover {
-                                background-color: #23769a;
-                                }
+                         /* logo when hovered */
+                         .skin-blue .main-header .logo:hover {
+                         background-color: #23769a;
+                         }
 
-                                /* navbar (rest of the header) */
-                                .skin-blue .main-header .navbar {
-                                background-color: #23769a;
-                                }
+                         /* navbar (rest of the header) */
+                         .skin-blue .main-header .navbar {
+                         background-color: #23769a;
+                         }
 
-                                /* main sidebar */
-                                .skin-blue .main-sidebar {
-                                background-color: #23769a;
-                                }
+                         /* main sidebar */
+                         .skin-blue .main-sidebar {
+                         background-color: #23769a;
+                         }
                                 
-                                .sidebar {
-                                color: #23769a;
-                                position: fixed;
-                                width: 1px;
-                                white-space: nowrap;
-                                overflow: visible;
-                                background-color: #23769a;
-                                }
+                         /* active selected tab in the sidebarmenu */
+                         .skin-blue .main-sidebar .sidebar .sidebar-menu .active a{
+                         background-color: #23769a;
+                         }
 
-                                /* active selected tab in the sidebarmenu */
-                                .skin-blue .main-sidebar .sidebar .sidebar-menu .active a{
-                                background-color: white;
-                                }
+                         /* other links in the sidebarmenu */
+                         .skin-blue .main-sidebar .sidebar .sidebar-menu a{
+                         background-color: #23769a;
+                         color: white;
+                         }
 
-                                /* other links in the sidebarmenu */
-                                .skin-blue .main-sidebar .sidebar .sidebar-menu a{
-                                background-color: white;
-                                color: #000000;
-                                }
+                         /* other links in the sidebarmenu when hovered */
+                         .skin-blue .main-sidebar .sidebar .sidebar-menu a:hover{
+                         background-color: #23769a;
+                         }
+                                
+                         /* toggle button when hovered  */
+                         .skin-blue .main-header .navbar .sidebar-toggle:hover{
+                         background-color: #23769a;
+                         }
 
-                                /* other links in the sidebarmenu when hovered */
-                                .skin-blue .main-sidebar .sidebar .sidebar-menu a:hover{
-                                background-color: white;
-                                }
-                                /* toggle button when hovered  */
-                                .skin-blue .main-header .navbar .sidebar-toggle:hover{
-                                background-color: white;
-                                }
-
-                                /* body */
-                                .content-wrapper, .right-side {
-                                background-color: white;
-                                }
-                                '))),
+                         /* body */
+                         .content-wrapper, .right-side {
+                         background-color: white;
+                         }
+                                
+                         /* box */
+                         .box{
+                         -webkit-box-shadow: none; -moz-box-shadow: none;box-shadow: none;
+                         }
+                         
+                         .box-body {
+                         padding-left: 0px;
+                         padding-right: 0px;
+                         }
+                         
+                         /* sidebar */
+                         .sidebar {
+                         padding-top: 200px;
+                         }
+                         '))),
       
-      fluidRow(
+      # _ Header ----
+      shinydashboard::box(
+        width = 12,
+        solidHeader = TRUE,
         
-        tags$head(tags$style(HTML('.box{-webkit-box-shadow: none; -moz-box-shadow: none;box-shadow: none;}'))),
+        tags$img(src = "DEQ-logo-color-horizontal370x73.png"),
+        tags$div(span("Oregon Department of Environmental Quality Map Application for Freshwater Cyanobacteria Harmful Algal Blooms",
+                      style = "color: black; font-size: 40px")),
+        tags$br(),
+      ), # Header box END 
+      
+      # _ Part 1: Mapping data ----
+      shinydashboardPlus::box(
+        width = 12,
+        #title = "Mapping Data",
+        status = "primary",
+        solidHeader = FALSE,
+        collapsible = FALSE,
+        collapsed = FALSE,
+        #dropdownMenu = boxDropdown(),
         
-        # __ 1. Header ----
         shinydashboard::box(
-          width = 12,
+          width = 3,
+          #title = "date",
           solidHeader = TRUE,
           
-          #tags$script(HTML("$('.box').eq(0).css('border', '0px solid white');")),
-          #shinyjs::useShinyjs(),
-          #div(style="display: inline-block;vertical-align:top; width: 20px;",HTML("<br>")),
-          tags$img(src = "DEQ-logo-color-horizontal370x73.png"),
-          tags$div(span("Oregon CyAN Image of Cyanobacteria Abundance",
-                        #style = "color: black; font-size: 50px; margin-left: 20px")),
-                        style = "color: black; font-size: 50px")),
-          tags$br(),
-          shinyjs::useShinyjs(),
-          #div(style="display: inline-block;vertical-align:top; width: 20px;",HTML("<br>")),
-          div(style="display: inline-block;vertical-align:top; height:20px; width: 300px;",h4("Show Introduction and User Guide:")),
-          div(style="display: inline-block;vertical-align:top; height:50px; width: 150px;",shinyWidgets::switchInput(inputId = "sidebarSwitch",size = "small"))
-        ),
-        
-        # __ 2. Map ----
-        shinydashboardPlus::box(
-          title = "Map",
-          status = "primary",
-          solidHeader = TRUE,
-          width = 12,
-          collapsible = TRUE,
-          collapsed = FALSE,
-          dropdownMenu = boxDropdown(),
+          # __ Select a Date ----
+          tags$style(HTML(".datepicker {z-index:99999 !important;}")),
           
-          shinydashboard::box(width = 2,
-                              height = "700px",
-                              solidHeader = TRUE,
-                              
-                              # ___ (.1) Waterbody ----
-                              shinyWidgets::pickerInput(inputId = "waterbody",
-                                                        label = tags$h4("Select a Waterbody:"),
-                                                        choices = list(
-                                                          "Oregon",
-                                                          "Within Drinking Water Source Area" = 
-                                                            unique(sort(dta[which(dta$wi_DWSA == c("Yes")),]$GNISIDNAME)),
-                                                          "Not-Within Drinking Water Source Area" = 
-                                                            unique(sort(dta[which(dta$wi_DWSA == c("No")),]$GNISIDNAME))
-                                                        ),
-                                                        # selected = "Alkali Lake_01116863",
-                                                        multiple = FALSE),
-                              
-                              # ___ (.2) Dates ----
-                              tags$style(HTML(".datepicker {z-index:99999 !important;}")),
-                              
-                              shiny::dateInput(inputId = "date_map",
-                                               label = tags$h4("Select a Date:"),
-                                               value = max(dta$Date),
-                                               min = min(dta$Date),
-                                               max = max(dta$Date),
-                                               format = "yyyy-mm-dd",
-                                               startview = "month",
-                                               weekstart = 0,
-                                               datesdisabled = missing.dates$Date),
-                              
-                              # tableOutput("values"),
-                              
-                              # ___ (.3) Boxplot ----
-                              
-                              HTML(paste(
-                                #tags$br(),
-                                tags$h4("Cyanobacteria abundance of the selected waterbody on the selected date\n(cell/mL):")
-                              )),
-                              
-                              plotlyOutput("boxplot")
-                              
-          ),
+          shiny::dateInput(inputId = "date_map",
+                           label = tags$h4("Select a Date:"),
+                           value = max(dta$Date),
+                           min = min(dta$Date),
+                           max = max(dta$Date),
+                           format = "yyyy-mm-dd",
+                           startview = "month",
+                           weekstart = 0,
+                           datesdisabled = missing.dates$Date),
           
-          # ___ (.4) Map ----
-          shinydashboard::box(width = 10,
-                              height = "700px",
-                              solidHeader = TRUE,
-                              
-                              # tags$style(type = "text/css", "#map {height: calc(80vh - 80px) !important;}"),
-                              leaflet::leafletOutput("map", height = "680px"))
-          
-        ),
-        
-        # __ 3. Plot ----
-        shinydashboardPlus::box(
-          title = "Plot",
-          status = "warning",
-          solidHeader = TRUE,
-          width = 12,
-          collapsible = TRUE,
-          collapsed = FALSE,
-          dropdownMenu = boxDropdown(),
+          # tags$br(),
+          # __ Bloom lake table ----
+          HTML(paste(
+            tags$h5("Waterbodies exceeding WHO guideline (100,000 cells/mL) for cyanobacteria in recreational freshwater on selected date:")
+          )),
           
           shinydashboard::box(
-            width = 2,
-            height = "400px",
+            width = 12,
+            #title = "date",
             solidHeader = TRUE,
+            background = "light-blue",
             
-            # ___ (.1) Date range ----
-            shiny::dateRangeInput(inputId = "date_plot",
-                                  label = tags$h4("Select Date Range to Plot:"),
-                                  start = min(dta$Date),
-                                  end = max(dta$Date),
-                                  min = min(dta$Date),
-                                  max = max(dta$Date),
-                                  separator = "to",
-                                  format = "yyyy-mm-dd",
-                                  startview = "year",
-                                  weekstart = 0),
-            
-            # ___ (.2) Summary Statistics ----
-            checkboxGroupInput(inputId = "matrix",
-                               label = tags$h4("Summary Statistics:"),
-                               choices = c("Maximum" = "Maximum",
-                                           "Mean" = "Mean",
-                                           "Minimum" = "Minimum"),
-                               selected = "Mean"),
-            
-            # ___ (.3) Plot types ----
-            checkboxGroupInput(inputId = "plot_log",
-                               label = tags$h4("See Log Scale:"),
-                               choices = c("Log Scale" = "log"))
-            
-          ),
-          
-          # ___ (.4) Plot ----
-          shinydashboard::box(
-            width = 10,
-            height = "400px",
-            solidHeader = TRUE,
-            
-            plotlyOutput("plot")
-            
+            tableOutput("bloom_lakes")
           )
           
+        ), # Date box END
+        
+        shinydashboard::box(
+          width = 2,
+          #title = "waterbody"
+          solidHeader = TRUE,
+          
+          # __ Select waterbody ----
+          shinyWidgets::pickerInput(inputId = "waterbody",
+                                    label = tags$h4("Select a Waterbody:"),
+                                    choices = list(
+                                      "Oregon",
+                                      "Within Drinking Water Source Area" = 
+                                        unique(sort(dta[which(dta$wi_DWSA == c("Yes")),]$GNISIDNAME)),
+                                      "Not-Within Drinking Water Source Area" = 
+                                        unique(sort(dta[which(dta$wi_DWSA == c("No")),]$GNISIDNAME))
+                                    ),
+                                    multiple = FALSE),
+          
+          # __ Boxplot ----
+          HTML(paste(
+            #tags$br(),
+            tags$h5("Cyanobacteria abundance of selected waterbody on selected date\n(cell/mL):")
+          )),
+          
+          plotlyOutput("boxplot")
+        ), # Waterbody box END
+        
+        shinydashboard::box(
+          width = 7,
+          #title = "map",
+          solidHeader = TRUE,
+          
+          # __ Map ----
+          leaflet::leafletOutput("map", height = "650px")
+          
+        ) # Map box END
+        
+      ), # Part 1 box END
+      
+      # _ Part 2: Time series data ----
+      shinydashboardPlus::box(
+        width = 12,
+        #title = "Time Series Data of Selected Lake",
+        status = "warning",
+        solidHeader = FALSE,
+        collapsible = FALSE,
+        collapsed = FALSE,
+        #dropdownMenu = boxDropdown(),
+        
+        # __ Date Range ----
+        shinydashboard::box(
+          width = 3,
+          #title = "options",
+          solidHeader = TRUE,
+          
+          shiny::dateRangeInput(inputId = "date_plot",
+                                label = tags$h4("Date Range:"),
+                                start = min(dta$Date),
+                                end = max(dta$Date),
+                                min = min(dta$Date),
+                                max = max(dta$Date),
+                                separator = "to",
+                                format = "yyyy-mm-dd",
+                                startview = "year",
+                                weekstart = 0),
+          
+          # __ Summary Statistics ----
+          checkboxGroupInput(
+            inputId = "matrix",
+            label = tags$h4("Summary Statistics:"),
+            choices = c("Maximum" = "Maximum",
+                        "Mean" = "Mean",
+                        "Minimum" = "Minimum"),
+            selected = "Mean"),
+          
+          # __ Plot types ----
+          checkboxGroupInput(
+            inputId = "plot_log",
+            label = tags$h4("y-axis:"),
+            choices = c("Log Scale" = "log")),
+          
+          tags$br(),
+          tags$br(),
+          
+          # __ Data count ----
+          shinydashboard::box(
+            width = 12,
+            #title = "data_count",
+            solidHeader = FALSE
+            
+          ),
+          
+          HTML(paste(
+            tags$h4("Sample counts for each summary statistics:")
+          )),
+          
+          radioButtons(
+            inputId = "mthyr",
+            label = tags$h4("x-axis:"),
+            choices = c("Month" = "mth",
+                        "Year" = "yr"),
+            selected = "mth"),
+          
+          plotlyOutput("plot_data")
+          
         ),
         
-        # __ 4. Table ----
-        shinydashboardPlus::box(
-          title = "Table",
-          status = "success",
+        # __ Cell count ----
+        shinydashboard::box(
+          width = 9,
+          #title = "time_series_plot",
           solidHeader = TRUE,
-          width = 12,
-          collapsible = TRUE,
-          collapsed = FALSE,
-          dropdownMenu = boxDropdown(),
+          
+          plotlyOutput("plot_cell")
+        ),
+        
+        shinydashboard::box(
+          width = 9,
+          #title = "data_table",
           
           DT::dataTableOutput("table")
-          
         )
-      )
-    )
-  ),
+        
+      ) # Part 2 box END
+      
+      
+    ) # dashboardBody END
+  ), # dashboardPage END
   
   server = function(input, output, session) {
     
@@ -366,8 +425,6 @@ shinyApp(
       sliderValues()
     })  
     
-    
-    
     # _ click on the map ---- 
     observe({
       
@@ -416,16 +473,16 @@ shinyApp(
                                     showticklabels = FALSE,
                                     showgrid = FALSE),
                        yaxis = list(type = "log",
-                         title = "",
-                         zeroline = TRUE,
-                         showline = TRUE,
-                         showticklabels = TRUE,
-                         showgrid = FALSE),
+                                    title = "",
+                                    zeroline = TRUE,
+                                    showline = TRUE,
+                                    showticklabels = TRUE,
+                                    showgrid = FALSE),
                        showlegend = FALSE,
                        annotations = list(x = input$date_map,
                                           y = log(100000)/log(10),
                                           #y = 100000,
-                                          text = "WHO Thresholds\n(100,000)",
+                                          text = "WHO Threshold",
                                           xref = "x",
                                           yref = "y",
                                           showarrow = TRUE,
@@ -440,6 +497,41 @@ shinyApp(
     pal.plot <- c("orange","blue","green","white","white","white")
     pal.plot <- setNames(pal.plot,unique(sort(dta$`Summary Statistics`)))
     
+    # __ (.1) Data count ----
+    df_data <- reactive({
+      
+      dta %>% 
+        dplyr::filter(GNISIDNAME %in% input$waterbody) %>% 
+        #dplyr::filter(`Summary Statistics` %in% input$matrix) %>% 
+        dplyr::filter(`Summary Statistics` == "Mean") %>% 
+        dplyr::filter(Date >= input$date_plot[1],Date <= input$date_plot[2]) %>% 
+        dplyr::group_by(`Summary Statistics`,
+                        mth = floor_date(Date,"month"),
+                        yr = floor_date(Date,"year")) %>% 
+        dplyr::summarise(`Data Count`= n())
+      
+    })
+    
+    output$plot_data <- renderPlotly({
+      
+      plotly::plot_ly(
+        data = df_data(),
+        #x = ~ mth,
+        #x = ~ yr,
+        x = ~ df_data()[[input$mthyr]],
+        y = ~`Data Count`,
+        #group = ~`Summary Statistics`,
+        type = "bar",
+        #mode = "lines",
+        #color = ~`Summary Statistics`,
+        #colors = pal.plot,
+        marker = list(color = "light-blue")) %>% 
+        plotly::layout(yaxis = list(title = "Sample Counts"),
+                       xaxis = list(title = "Month",
+                                    range = c(min(df()$Date),max(df()$Date))))
+    })
+    
+    # __ (.2) Cell count ----
     df <- reactive({
       
       dta %>% 
@@ -463,7 +555,7 @@ shinyApp(
       
     })
     
-    output$plot <- renderPlotly({
+    output$plot_cell <- renderPlotly({
       
       plotly::plot_ly(
         data = df(),
@@ -479,12 +571,14 @@ shinyApp(
                        title = as.character(unique(df()$GNISIDNAME))
         ) %>% 
         plotly::layout(yaxis = list(type = type(),
-                                    title = yaxis()))
+                                    title = yaxis())) #%>% 
+      #layout(autosize = F, width = 1000, height = 700)
       
     })
     
-    # (3) Data table ----
+    # (3) Tables ----
     
+    # _ Data table ----
     df_tbl <- reactive({
       
       df() %>% 
@@ -492,7 +586,8 @@ shinyApp(
         dplyr::mutate(`Cyanobacteria (cells/mL)` = ifelse(as.character(`Cyanobacteria (cells/mL)`) == "6310", "Not Detected",
                                                           scales::comma(`Cyanobacteria (cells/mL)`))) %>% 
         dplyr::mutate(`Summary Statistics` = ifelse(as.character(`Cyanobacteria (cells/mL)`) == "Not Detected", "NA",
-                                                    `Summary Statistics`))
+                                                    `Summary Statistics`)) %>% 
+        dplyr::rename(Waterbody_GNISID = GNISIDNAME)
     })
     
     output$table <- DT::renderDataTable({
@@ -506,10 +601,10 @@ shinyApp(
                        compact = TRUE,
                        nowrap = TRUE,
                        scorllX = TRUE,
-                       buttons = list('print',
-                                      list(extend = 'collection',
-                                           buttons = c('csv','excel','pdf'),
-                                           text = 'Download')
+                       buttons = list(#'print',
+                         list(extend = 'collection',
+                              buttons = c('csv','excel','pdf'),
+                              text = 'Download')
                        )),
         rownames = FALSE,
         filter = 'bottom'
@@ -517,5 +612,22 @@ shinyApp(
       #DT::formatDate("Date","toLocaleString")
     }, server = FALSE)
     
+    # _ Bloom table ----
+    df.blooms <- reactive({
+      
+      dta %>% 
+        dplyr::filter(Date %in% input$date_map) %>% 
+        dplyr::filter(`Summary Statistics` == "Mean") %>%
+        dplyr::filter(`Cyanobacteria (cells/mL)` > 100000) %>% 
+        dplyr::select(GNISIDNAME,"Cyanobacteria (cells/mL)") %>% 
+        dplyr::distinct() %>% 
+        dplyr::rename(Waterbody_GNISID = GNISIDNAME) %>% 
+        dplyr::mutate(`Cyanobacteria (cells/mL)` = scales::comma(`Cyanobacteria (cells/mL)`))
+      
+    })
+    
+    output$bloom_lakes <- renderTable(df.blooms())
+    
   }
-)
+  
+) # shinyApp END

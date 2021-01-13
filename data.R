@@ -71,11 +71,11 @@ lakes <- rgdal::readOGR(dsn = "./data/NHDwaterbody_resolvable_lakes.shp",
 
 # (4) Map: raster ----
 # Raster color 
-thevalues <-c(6309.5,18000,43000,61500,84000,100000,130000,1000000)
+thevalues <-c(6310,18000,43000,61500,84000,100000,130000,1000000)
 
 pal.map <- leaflet::colorBin(palette = RColorBrewer::brewer.pal(7,"YlOrRd"),
-                             bins = c(6309.5,18000,43000,61500,84000,100000,130000,1000000),
-                             domain = c(6309.5,18000,43000,61500,84000,100000,130000,1000000),
+                             bins = c(6310,18000,43000,61500,84000,100000,130000,1000000),
+                             domain = c(6310,18000,43000,61500,84000,100000,130000,1000000),
                              na.color = "transparent")
 # ----
 # rm(dta1); rm(dta2); rm(dta3)

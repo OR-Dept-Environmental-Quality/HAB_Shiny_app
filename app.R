@@ -1,18 +1,33 @@
-library(tidyverse)
-library(shiny);library(shinyWidgets);library(shinythemes)
-library(shinydashboard);library(shinydashboardPlus);library(shinyjs)
-library(raster);library(sp)
-library(leaflet);library(leaflet.extras)
-library(scales)
-library(plotly)
-library(DT)
-library(lubridate)
+packages = c("tidyverse", 
+             "shiny","shinyWidgets","shinythemes",
+             "shinydashboard","shinyjs",
+             "raster","sp",
+             "leaflet","leaflet.extras",
+             "scales","plotly",
+             "DT","lubridate")
+
+## Now load or install&load all
+package.check <- lapply(
+  packages,
+  FUN = function(x) {
+    if (!require(x, character.only = TRUE)) {
+      install.packages(x, dependencies = TRUE)
+      library(x, character.only = TRUE)
+    }
+  }
+)
+
+# shinydashboardPlus: https://rinterface.github.io/shinydashboardPlus/articles/shinydashboardPlus.html
+if (!require("shinydashboardPlus")) {
+  devtools::install_github("RinteRface/shinydashboardPlus")
+  library(shinydashboardPlus)
+}
 
 load("data.RData")
 
 # Shiny App ----
 shinyApp(
-  ui = dashboardPage(
+  ui = shinydashboardPlus::dashboardPage(
     options = list(sidebarExpandOnHover = TRUE),
     header = dashboardHeader(titleWidth = 400),
     
@@ -29,20 +44,15 @@ shinyApp(
                  freshwater ecosystems of Oregon. Satellite<br/>
                  data come from the US EPA CyAN project<br/>
                  and are updated on a regular basis.")))),
-        menuItem("User Guide", icon = icon("cogs"),
-                 menuSubItem(h5(HTML("
-                 12345678911121314151617181912021222324252628<br/>
-                 12345678911121314151617181912021222324252628<br/>
-                                     12345678911121314151617181912021222324252628<br/>
-                                     12345678911121314151617181912021222324252628")))),
+        menuItem("User Guide", icon = icon("cog"), 
+                 href = "http://192.168.0.7:8888/userGuide.html"),
         menuItem("Contact", icon = icon("envelope"),
                  menuSubItem(h5(HTML("
                  For more information on the Oregon HABs Map<br/>
                  Application Project, please contact<br/>
                  <br/>
                  Dan Sobota, Project Manager<br/>
-                 Daniel.Sobota@deq.state.or.us
-                                     "))))
+                 Daniel.Sobota@deq.state.or.us"))))
       ) # sidebarMenu END
     ), # dashboardSidebar END
     
@@ -68,6 +78,10 @@ shinyApp(
                          /* main sidebar */
                          .skin-blue .main-sidebar {
                          background-color: #23769a;
+                         }
+                         
+                         .main-sidebar {
+                         font-size: 20px;
                          }
                                 
                          /* active selected tab in the sidebarmenu */
@@ -134,8 +148,8 @@ shinyApp(
         #dropdownMenu = boxDropdown(),
         
         shinydashboard::box(
-          width = 3,
-          #title = "date",
+          width = 2,
+          #title = "date_and_waterbody",
           solidHeader = TRUE,
           
           # __ Select a Date ----
@@ -151,29 +165,7 @@ shinyApp(
                            weekstart = 0,
                            datesdisabled = missing.dates$Date),
           
-          # tags$br(),
-          # __ Bloom lake table ----
-          HTML(paste(
-            tags$h5("Waterbodies exceeding WHO guideline (100,000 cells/mL) for cyanobacteria in recreational freshwater on selected date:")
-          )),
-          
-          shinydashboard::box(
-            width = 12,
-            #title = "date",
-            solidHeader = TRUE,
-            background = "light-blue",
-            
-            tableOutput("bloom_lakes")
-          )
-          
-        ), # Date box END
-        
-        shinydashboard::box(
-          width = 2,
-          #title = "waterbody"
-          solidHeader = TRUE,
-          
-          # __ Select waterbody ----
+          # __ Select a Waterbody ----
           shinyWidgets::pickerInput(inputId = "waterbody",
                                     label = tags$h4("Select a Waterbody:"),
                                     choices = list(
@@ -192,21 +184,22 @@ shinyApp(
           )),
           
           plotlyOutput("boxplot")
-        ), # Waterbody box END
-        
+
+        ), # Date box END
+
+        # __ Map ----
         shinydashboard::box(
-          width = 7,
+          width = 10,
           #title = "map",
           solidHeader = TRUE,
-          
-          # __ Map ----
+
           leaflet::leafletOutput("map", height = "650px")
           
         ) # Map box END
         
       ), # Part 1 box END
       
-      # _ Part 2: Time series data ----
+      # _ Part 2: Plot ----
       shinydashboardPlus::box(
         width = 12,
         #title = "Time Series Data of Selected Lake",
@@ -218,7 +211,7 @@ shinyApp(
         
         # __ Date Range ----
         shinydashboard::box(
-          width = 3,
+          width = 2,
           #title = "options",
           solidHeader = TRUE,
           
@@ -246,52 +239,27 @@ shinyApp(
           checkboxGroupInput(
             inputId = "plot_log",
             label = tags$h4("y-axis:"),
-            choices = c("Log Scale" = "log")),
-          
-          tags$br(),
-          tags$br(),
-          
-          # __ Data count ----
-          shinydashboard::box(
-            width = 12,
-            #title = "data_count",
-            solidHeader = FALSE
-            
-          ),
-          
-          HTML(paste(
-            tags$h4("Sample counts for each summary statistics:")
-          )),
-          
-          radioButtons(
-            inputId = "mthyr",
-            label = tags$h4("x-axis:"),
-            choices = c("Month" = "mth",
-                        "Year" = "yr"),
-            selected = "mth"),
-          
-          plotlyOutput("plot_data")
+            choices = c("Log Scale" = "log"))
           
         ),
         
         # __ Cell count ----
         shinydashboard::box(
-          width = 9,
+          width = 10,
           #title = "time_series_plot",
           solidHeader = TRUE,
           
           plotlyOutput("plot_cell")
-        ),
+        )
+      ), # Part 2 END
         
+      # _ Part 3: Table ----
         shinydashboard::box(
-          width = 9,
+          width = 12,
           #title = "data_table",
           
           DT::dataTableOutput("table")
-        )
-        
-      ) # Part 2 box END
-      
+        ) # Part 3 END
       
     ) # dashboardBody END
   ), # dashboardPage END

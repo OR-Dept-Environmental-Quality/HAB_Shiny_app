@@ -338,7 +338,7 @@ shinyApp(
         
       } else {
         
-        map.tif.dir <- reactive(paste0("data/", df.map.date()$Year.dta, "/"))
+        map.tif.dir <- reactive(paste0("//deqhq1/WQ-Share/Harmful Algal Blooms Coordination Team/HAB_Shiny_app/data/", df.map.date()$Year.dta, "/"))
         
         file.name <- reactive(paste0(df.map.date()$map_day,".tif"))
         

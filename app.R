@@ -1,6 +1,6 @@
 packages = c("tidyverse", 
              "shiny","shinyWidgets","shinythemes",
-             "shinydashboard","shinyjs",
+             "shinydashboard",
              "raster","sp",
              "leaflet","leaflet.extras",
              "scales","plotly",
@@ -265,20 +265,7 @@ shinyApp(
   ), # dashboardPage END
   
   server = function(input, output, session) {
-    
-    # Sidebar switch ----
-    observeEvent(input$sidebarSwitch,{
-      
-      if(input$sidebarSwitch==TRUE) {
-        shinyjs::removeClass(selector = "body", class = "sidebar-collapse")
-      } else {
-        shinyjs::addClass(selector = "body", class = "sidebar-collapse")
-      }
-      
-    })
-    
-    
-    
+
     # (1) Map ----
     # _ initial map ----
     output$map <- leaflet::renderLeaflet({

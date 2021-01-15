@@ -44,8 +44,7 @@ shinyApp(
                  freshwater ecosystems of Oregon. Satellite<br/>
                  data come from the US EPA CyAN project<br/>
                  and are updated on a regular basis.")))),
-        menuItem("User Guide", icon = icon("cog"), 
-                 href = "http://192.168.0.7:8888/userGuide.html"),
+        menuItem("User Guide",  icon = icon("cog"), href="userGuide.html"),
         menuItem("Contact", icon = icon("envelope"),
                  menuSubItem(h5(HTML("
                  For more information on the Oregon HABs Map<br/>

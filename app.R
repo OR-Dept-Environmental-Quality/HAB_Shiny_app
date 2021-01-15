@@ -29,10 +29,10 @@ load("data.RData")
 shinyApp(
   ui = shinydashboardPlus::dashboardPage(
     options = list(sidebarExpandOnHover = TRUE),
-    header = dashboardHeader(titleWidth = 400),
+    header = shinydashboardPlus::dashboardHeader(titleWidth = 400),
     
     # Sidebar ----
-    sidebar = dashboardSidebar(
+    sidebar = shinydashboardPlus::dashboardSidebar(
       minified = TRUE, collapsed = TRUE, width = 400,
       
       sidebarMenu(
@@ -56,7 +56,7 @@ shinyApp(
     ), # dashboardSidebar END
     
     # Body ----
-    body = dashboardBody(
+    body = shinydashboard::dashboardBody(
       
       tags$head(
         tags$style(HTML('/* logo */

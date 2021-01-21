@@ -58,7 +58,7 @@ shinyApp(
     # Body ----
     body = shinydashboard::dashboardBody(
       
-      tags$head(
+      tags$div(
         tags$style(HTML('/* logo */
                          .skin-blue .main-header .logo {
                          background-color: #23769a;
@@ -121,7 +121,17 @@ shinyApp(
                          
                          /* sidebar */
                          .sidebar {
-                         padding-top: 200px;
+                         padding-top: 100px;
+                         }
+                         
+                         /*pickerinput_waterbody*/
+                         .selectpicker {
+                         z-index: 999999999 !important;
+                         }
+                         
+                         /*datepicker*/
+                         .datepicker {
+                         z-index:99999 !important;
                          }
                          '))),
       
@@ -147,12 +157,12 @@ shinyApp(
         #dropdownMenu = boxDropdown(),
         
         shinydashboard::box(
-          width = 2,
+          width = 3,
           #title = "date_and_waterbody",
           solidHeader = TRUE,
           
           # __ Select a Date ----
-          tags$style(HTML(".datepicker {z-index:99999 !important;}")),
+          #tags$style(HTML(".datepicker {z-index:99999 !important;}")),
           
           shiny::dateInput(inputId = "date_map",
                            label = tags$h4("Select a Date:"),
@@ -165,16 +175,29 @@ shinyApp(
                            datesdisabled = missing.dates$Date),
           
           # __ Select a Waterbody ----
+          #shinyWidgets::pickerInput(inputId = "waterbody",
+          #                          label = tags$h4("Select a Waterbody:"),
+          #                          choices = list(
+          #                            "Oregon",
+          #                            "Within Drinking Water Source Area" = 
+          #                              unique(sort(dta[which(dta$wi_DWSA == c("Yes")),]$GNISIDNAME)),
+          #                            "Not-Within Drinking Water Source Area" = 
+          #                              unique(sort(dta[which(dta$wi_DWSA == c("No")),]$GNISIDNAME))
+          #                          ),
+          #                          multiple = FALSE),
+          
           shinyWidgets::pickerInput(inputId = "waterbody",
                                     label = tags$h4("Select a Waterbody:"),
                                     choices = list(
                                       "Oregon",
-                                      "Within Drinking Water Source Area" = 
-                                        unique(sort(dta[which(dta$wi_DWSA == c("Yes")),]$GNISIDNAME)),
-                                      "Not-Within Drinking Water Source Area" = 
-                                        unique(sort(dta[which(dta$wi_DWSA == c("No")),]$GNISIDNAME))
-                                    ),
-                                    multiple = FALSE),
+                                      "Waterbody Name_GNISID" = unique(sort(dta$GNISIDNAME))
+                                      ),
+                                      multiple = FALSE),
+          
+          shiny::textOutput("dw"),
+          
+            tags$hr(),
+          
           
           # __ Boxplot ----
           HTML(paste(
@@ -188,11 +211,11 @@ shinyApp(
 
         # __ Map ----
         shinydashboard::box(
-          width = 10,
+          width = 9,
           #title = "map",
           solidHeader = TRUE,
 
-          leaflet::leafletOutput("map", height = "650px")
+          leaflet::leafletOutput("map", height = "700px")
           
         ) # Map box END
         
@@ -202,7 +225,7 @@ shinyApp(
       shinydashboardPlus::box(
         width = 12,
         #title = "Time Series Data of Selected Lake",
-        status = "warning",
+        status = "primary",
         solidHeader = FALSE,
         collapsible = FALSE,
         collapsed = FALSE,
@@ -210,7 +233,7 @@ shinyApp(
         
         # __ Date Range ----
         shinydashboard::box(
-          width = 2,
+          width = 3,
           #title = "options",
           solidHeader = TRUE,
           
@@ -244,7 +267,7 @@ shinyApp(
         
         # __ Cell count ----
         shinydashboard::box(
-          width = 10,
+          width = 9,
           #title = "time_series_plot",
           solidHeader = TRUE,
           
@@ -420,7 +443,8 @@ shinyApp(
                       type = "box",
                       name = unique(df.box()$GNISIDNAME)) %>% 
         add_trace(x = input$date_map,
-                  y = 100000) %>% 
+                  y = 100000,
+                  line = list(color = "red")) %>% 
         plotly::layout(xaxis = list(title = "",
                                     zeroline = FALSE,
                                     showline = FALSE,
@@ -437,6 +461,7 @@ shinyApp(
                                           y = log(100000)/log(10),
                                           #y = 100000,
                                           text = "WHO Threshold",
+                                          font = list(size = 8),
                                           xref = "x",
                                           yref = "y",
                                           showarrow = TRUE,
@@ -491,7 +516,8 @@ shinyApp(
       dta %>% 
         dplyr::filter(GNISIDNAME %in% input$waterbody) %>% 
         dplyr::filter(`Summary Statistics` %in% input$matrix) %>% 
-        dplyr::filter(Date >= input$date_plot[1],Date <= input$date_plot[2])
+        dplyr::filter(Date >= input$date_plot[1],Date <= input$date_plot[2]) %>% 
+        dplyr::mutate(who = as.numeric("100000"))
       
     })
     
@@ -519,15 +545,30 @@ shinyApp(
         type = "scatter",
         mode = "lines",
         color = ~`Summary Statistics`,
-        colors = pal.plot) %>% 
+        colors = pal.plot,
+        legendgroup = "sta") %>% 
         plotly::layout(xaxis = list(title = "Date", range = c(min(df()$Date),max(df()$Date))),
                        # yaxis = list(title = "Cyanobacteria (cells/mL)"),
-                       title = as.character(unique(df()$GNISIDNAME))
-        ) %>% 
+                       title = as.character(unique(df()$GNISIDNAME))) %>% 
         plotly::layout(yaxis = list(type = type(),
-                                    title = yaxis())) #%>% 
-      #layout(autosize = F, width = 1000, height = 700)
-      
+                                    title = yaxis())) %>% 
+        plotly::layout(annotations = list(x = max(df()$Date),
+                                          y = 100000,
+                                          text = "WHO Threshold",
+                                          font = list(size = 12),
+                                          xref = "x",
+                                          yref = "y",
+                                          showarrow = TRUE,
+                                          arrowhead = 3,
+                                          arrowsize = 1,
+                                          ax = -60,
+                                          ay = -20)) %>% 
+        add_trace(y = ~df()$who, type = "scatter", mode = "lines",
+                  line = list(color = "red"),
+                  name = "WHO Threshold",
+                  legendgroup = "who",
+                  showlegend = FALSE)
+
     })
     
     # (3) Tables ----
@@ -582,6 +623,24 @@ shinyApp(
     
     output$bloom_lakes <- renderTable(df.blooms())
     
+    # (4) Text: Drinking Water Area ----
+    dw <- reactive({
+      
+      dta %>% 
+        dplyr::filter(GNISIDNAME %in% input$waterbody) %>% 
+        dplyr::mutate(dwsa = ifelse(wi_DWSA == "Yes", "within a drinking water source area.", "not within a drinking water source area.")) %>% 
+        pull(dwsa)
+      
+      })
+    
+    output$dw <- renderText({ 
+      
+      if(input$waterbody == c("Oregon")) {}
+         else {
+           paste0("The waterbody is ",unique(dw())) 
+         }
+    })
+      
   }
   
 ) # shinyApp END

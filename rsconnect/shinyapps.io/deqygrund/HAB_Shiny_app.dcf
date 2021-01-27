@@ -1,0 +1,13 @@
+name: HAB_Shiny_app
+title: HAB_Shiny_app
+username:
+account: deqygrund
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 3033879
+bundleId: 3903047
+url: https://deqygrund.shinyapps.io/HAB_Shiny_app/
+when: 1606284761.29812
+asMultiple: FALSE
+asStatic: FALSE
+ignoredFiles: .gitattributes|.RData|app_1.R|io_connection.R|rastertest.R|test_dashboard.R|test_dashboard_2.R|test_dashboard_3.R|test_rightsidebar.R

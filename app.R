@@ -1,27 +1,16 @@
-packages = c("tidyverse", 
-             "shiny","shinyWidgets","shinythemes",
-             "shinydashboard",
-             "raster","sp",
-             "leaflet","leaflet.extras",
-             "scales","plotly",
-             "DT","lubridate")
-
-## Now load or install&load all
-package.check <- lapply(
-  packages,
-  FUN = function(x) {
-    if (!require(x, character.only = TRUE)) {
-      install.packages(x, dependencies = TRUE)
-      library(x, character.only = TRUE)
-    }
-  }
-)
-
-# shinydashboardPlus: https://rinterface.github.io/shinydashboardPlus/articles/shinydashboardPlus.html
-if (!require("shinydashboardPlus")) {
-  devtools::install_github("RinteRface/shinydashboardPlus")
-  library(shinydashboardPlus)
-}
+library(tidyverse)
+library(shiny)
+library(shinyWidgets)
+library(shinythemes)
+library(shinydashboard)
+library(shinydashboardPlus)
+library(raster)
+library(leaflet)
+library(leaflet.extras)
+library(scales)
+library(plotly)
+library(DT)
+library(lubridate)
 
 load("data.RData")
 
@@ -51,7 +40,13 @@ shinyApp(
                  Application Project, please contact<br/>
                  <br/>
                  Dan Sobota, Project Manager<br/>
-                 Daniel.Sobota@deq.state.or.us"))))
+                 Daniel.Sobota@deq.state.or.us<br/>
+                 <br/>
+                 Erin Costello, Water Quality Analyst<br/>
+                 Erin.Costello@deq.state.or.us<br/>
+                 <br/>
+                 Yuan Grund, Water Quality Analyst<br/>
+                 Yuan.Grund@deq.state.or.us"))))
       ) # sidebarMenu END
     ), # dashboardSidebar END
     
@@ -141,7 +136,7 @@ shinyApp(
         solidHeader = TRUE,
         
         tags$img(src = "DEQ-logo-color-horizontal370x73.png"),
-        tags$div(span("Oregon Department of Environmental Quality Map Application for Freshwater Cyanobacteria Harmful Algal Blooms",
+        tags$div(span("Map Application for Freshwater Cyanobacteria Harmful Algal Blooms",
                       style = "color: black; font-size: 40px")),
         tags$br(),
       ), # Header box END 
@@ -191,12 +186,12 @@ shinyApp(
                                     choices = list(
                                       "Oregon",
                                       "Waterbody Name_GNISID" = unique(sort(dta$GNISIDNAME))
-                                      ),
-                                      multiple = FALSE),
+                                    ),
+                                    multiple = FALSE),
           
           shiny::textOutput("dw"),
           
-            tags$hr(),
+          tags$hr(),
           
           
           # __ Boxplot ----
@@ -206,15 +201,15 @@ shinyApp(
           )),
           
           plotlyOutput("boxplot")
-
+          
         ), # Date box END
-
+        
         # __ Map ----
         shinydashboard::box(
           width = 9,
           #title = "map",
           solidHeader = TRUE,
-
+          
           leaflet::leafletOutput("map", height = "700px")
           
         ) # Map box END
@@ -274,41 +269,66 @@ shinyApp(
           plotlyOutput("plot_cell")
         )
       ), # Part 2 END
-        
+      
       # _ Part 3: Table ----
-        shinydashboard::box(
-          width = 12,
-          #title = "data_table",
-          
-          DT::dataTableOutput("table")
-        ) # Part 3 END
+      shinydashboard::box(
+        width = 12,
+        #title = "data_table",
+        
+        DT::dataTableOutput("table")
+      ) # Part 3 END
       
     ) # dashboardBody END
   ), # dashboardPage END
   
   server = function(input, output, session) {
-
+    
     # (1) Map ----
     # _ initial map ----
     output$map <- leaflet::renderLeaflet({
       
       leaflet::leaflet() %>% 
-        leaflet::addProviderTiles(providers$Esri.NatGeoWorldMap) %>% 
-        leaflet::setView(lng = -121, lat = 44, zoom=7) %>%
+        leaflet::addMapPane("OpenStreetMap", zIndex = -40) %>% 
+        leaflet::addMapPane("National Geographic World Map", zIndex = -30) %>%
+        leaflet::addMapPane("lakes.oregon", zIndex = -20) %>%
+        leaflet::addMapPane("lakes.resolvable", zIndex = -10) %>%
+        #leaflet::addMapPane("raster", zIndex = 450) %>%
+        leaflet::addProviderTiles("OpenStreetMap",group = "OpenStreetMap",
+                                  options = pathOptions(pane = "OpenStreetMap")) %>% 
+        leaflet::addProviderTiles(providers$Esri.NatGeoWorldMap,group = "National Geographic World Map",
+                                  options = pathOptions(pane = "National Geographic World Map")) %>% 
         leaflet.extras::addResetMapButton() %>% 
+        leaflet::addLayersControl(baseGroups = c("OpenStreetMap","National Geographic World Map"),
+                                  position = "topleft",
+                                  options = layersControlOptions(autoZIndex = FALSE))%>% 
+        leaflet::setView(lng = -121, lat = 44, zoom=7) %>%
         leaflet::addMiniMap(position = "bottomleft",
                             width = 200,
                             height = 200,
                             zoomLevelFixed = 5) %>% 
-        leaflet::addPolygons(data = lakes, 
+        leaflet::addPolygons(data = lakes.resolvable, 
                              color = "blue",
                              weight = 2,
-                             layer = ~lakes$GNIS_Name,
+                             layer = ~lakes.resolvable$GNISIDNAME,
                              smoothFactor = 0.5,
                              opacity = 0.5,
                              fillColor = "transparent",
                              fillOpacity = 1.0,
-                             label = ~lakes$GNIS_Name)
+                             label = ~lakes.resolvable$GNIS_Name,
+                             options = pathOptions(pane = "lakes.resolvable"))%>% 
+        leaflet::addPolygons(data = lakes.oregon, 
+                             color = "blue",
+                             weight = 0,
+                             layer = ~lakes.oregon$GNIS_Name,
+                             smoothFactor = 0.5,
+                             opacity = 0.5,
+                             fillColor = "transparent",
+                             fillOpacity = 1.0,
+                             label = ~lakes.oregon$GNIS_Name,
+                             options = pathOptions(pane = "lakes.oregon")) %>% 
+        leaflet::addScaleBar(position = c("bottomright"),
+                             options = scaleBarOptions()
+        )
       
     })
     
@@ -325,7 +345,7 @@ shinyApp(
         
         one.lake <- reactive({
           
-          lakes[which(lakes@data$GNISIDNAME == input$waterbody),]
+          lakes.resolvable[which(lakes.resolvable@data$GNISIDNAME == input$waterbody),]
           
         })
         
@@ -360,7 +380,8 @@ shinyApp(
         
       } else {
         
-        map.tif.dir <- reactive(paste0("//deqhq1/WQ-Share/Harmful Algal Blooms Coordination Team/HAB_Shiny_app/data/", df.map.date()$Year.dta, "/"))
+        #map.tif.dir <- reactive(paste0("//deqhq1/WQ-Share/Harmful Algal Blooms Coordination Team/HAB_Shiny_app/data/", df.map.date()$Year.dta, "/"))
+        map.tif.dir <- reactive(paste0("./data/", df.map.date()$Year.dta, "/"))
         
         file.name <- reactive(paste0(df.map.date()$map_day,".tif"))
         
@@ -374,7 +395,8 @@ shinyApp(
           leaflet::clearImages() %>% 
           leaflet::clearControls() %>% 
           leaflet::addRasterImage(rst(), project = FALSE, colors=pal.map, opacity = 1) %>% 
-          leaflet::addLegend(pal = pal.map, values = thevalues, title = "Cyanobacteria (cells/mL)")
+          leaflet::addLegend(pal = pal.map, values = thevalues, title = "Cyanobacteria (cells/mL)", position = "topright",
+                             labFormat = function(type,cuts,p){paste0(labels)})
         
       } 
       
@@ -568,7 +590,7 @@ shinyApp(
                   name = "WHO Threshold",
                   legendgroup = "who",
                   showlegend = FALSE)
-
+      
     })
     
     # (3) Tables ----
@@ -578,10 +600,8 @@ shinyApp(
       
       df() %>% 
         dplyr::select(GNISIDNAME,Date,`Cyanobacteria (cells/mL)`,`Summary Statistics`) %>% 
-        dplyr::mutate(`Cyanobacteria (cells/mL)` = ifelse(as.character(`Cyanobacteria (cells/mL)`) == "6310", "Not Detected",
-                                                          scales::comma(`Cyanobacteria (cells/mL)`))) %>% 
-        dplyr::mutate(`Summary Statistics` = ifelse(as.character(`Cyanobacteria (cells/mL)`) == "Not Detected", "NA",
-                                                    `Summary Statistics`)) %>% 
+        dplyr::mutate(`Cyanobacteria (cells/mL)` = ifelse(`Cyanobacteria (cells/mL)` <= 6310, "Not Detected",
+                                                          scales::comma(`Cyanobacteria (cells/mL)`))) %>%
         dplyr::rename(Waterbody_GNISID = GNISIDNAME)
     })
     
@@ -631,16 +651,16 @@ shinyApp(
         dplyr::mutate(dwsa = ifelse(wi_DWSA == "Yes", "within a drinking water source area.", "not within a drinking water source area.")) %>% 
         pull(dwsa)
       
-      })
+    })
     
     output$dw <- renderText({ 
       
       if(input$waterbody == c("Oregon")) {}
-         else {
-           paste0("The waterbody is ",unique(dw())) 
-         }
+      else {
+        paste0("The waterbody is ",unique(dw())) 
+      }
     })
-      
+    
   }
   
 ) # shinyApp END

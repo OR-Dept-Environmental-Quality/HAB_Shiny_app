@@ -379,15 +379,7 @@ shinyApp(
         return(NULL)
         
       } else {
-        
-<<<<<<< HEAD
-        #map.tif.dir <- reactive(paste0("//deqhq1/WQ-Share/Harmful Algal Blooms Coordination Team/HAB_Shiny_app/data/", df.map.date()$Year.dta, "/"))
-=======
-<<<<<<< HEAD
-        #map.tif.dir <- reactive(paste0("//deqhq1/WQ-Share/Harmful Algal Blooms Coordination Team/HAB_Shiny_app/data/", df.map.date()$Year.dta, "/"))
-=======
->>>>>>> 6e1a3b8eaffd056350313902686cdf3d3e8f15ad
->>>>>>> 25851e02e594a6c8274694d7ce6e628734c65eaf
+
         map.tif.dir <- reactive(paste0("./data/", df.map.date()$Year.dta, "/"))
         
         file.name <- reactive(paste0(df.map.date()$map_day,".tif"))

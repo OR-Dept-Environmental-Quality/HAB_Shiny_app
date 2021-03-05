@@ -7,6 +7,9 @@ library(shinydashboardPlus)
 library(raster)
 library(leaflet)
 library(leaflet.extras)
+library(leafem)
+library(mapview)
+library(plainview)
 library(scales)
 library(plotly)
 library(DT)
@@ -39,7 +42,7 @@ shinyApp(
                  For more information on the Oregon HABs Map<br/>
                  Application Project, please contact<br/>
                  <br/>
-                 Dan Sobota, Project Manager<br/>
+                 Dan Sobota, Water Quality Analyst (Lead) <br/>
                  Daniel.Sobota@deq.state.or.us<br/>
                  <br/>
                  Erin Costello, Water Quality Analyst<br/>
@@ -136,8 +139,12 @@ shinyApp(
         solidHeader = TRUE,
         
         tags$img(src = "DEQ-logo-color-horizontal370x73.png"),
-        tags$div(span("Map Application for Freshwater Cyanobacteria Harmful Algal Blooms",
+        tags$div(span("Freshwater Cyanobacteria Harmful Algal Blooms in Oregon",
                       style = "color: black; font-size: 40px")),
+        tags$div(span(HTML(paste0("A Map Application of ",
+                                  a("U.S. EPA CyAN Project", 
+                                    href="https://www.epa.gov/water-research/cyanobacteria-assessment-network-cyan"))),
+                      style = "color: black; font-size: 20px")),
         tags$br(),
       ), # Header box END 
       
@@ -185,7 +192,7 @@ shinyApp(
                                     label = tags$h4("Select a Waterbody:"),
                                     choices = list(
                                       "Oregon",
-                                      "Waterbody Name_GNISID" = unique(sort(dta$GNISIDNAME))
+                                      "Waterbody Name_GNISID" = unique(sort(lakes.resolvable$GNISIDNAME))
                                     ),
                                     multiple = FALSE),
           
@@ -289,18 +296,26 @@ shinyApp(
       
       leaflet::leaflet() %>% 
         leaflet::addMapPane("OpenStreetMap", zIndex = -40) %>% 
-        leaflet::addMapPane("National Geographic World Map", zIndex = -30) %>%
-        leaflet::addMapPane("lakes.oregon", zIndex = -20) %>%
+        leaflet::addMapPane("National Geographic World Map", zIndex = -40) %>%
+        leaflet::addMapPane("Tiles", zIndex = -40) %>%
+        leaflet::addMapPane("state.boundary", zIndex = -30) %>%
+        leaflet::addMapPane("HUC8",zIndex = -20) %>% 
         leaflet::addMapPane("lakes.resolvable", zIndex = -10) %>%
         #leaflet::addMapPane("raster", zIndex = 450) %>%
         leaflet::addProviderTiles("OpenStreetMap",group = "OpenStreetMap",
                                   options = pathOptions(pane = "OpenStreetMap")) %>% 
         leaflet::addProviderTiles(providers$Esri.NatGeoWorldMap,group = "National Geographic World Map",
                                   options = pathOptions(pane = "National Geographic World Map")) %>% 
+        leaflet::addWMSTiles(baseUrl = 'https://www.mrlc.gov/geoserver/mrlc_display/NLCD_2016_Land_Cover_L48/wms?',
+                             group = "Land Cover (NLCD 2016)",
+                             layers = "NLCD_2016_Land_Cover_L48",
+                             options = leaflet::WMSTileOptions(version = '1.3.0',
+                                                               format = 'image/png',
+                                                               transparent = TRUE,
+                                                               pane = "Tiles")) %>%
         leaflet.extras::addResetMapButton() %>% 
-        leaflet::addLayersControl(baseGroups = c("OpenStreetMap","National Geographic World Map"),
-                                  position = "topleft",
-                                  options = layersControlOptions(autoZIndex = FALSE))%>% 
+        leaflet::addScaleBar(position = c("bottomright"),
+                             options = scaleBarOptions()) %>% 
         leaflet::setView(lng = -121, lat = 44, zoom=7) %>%
         leaflet::addMiniMap(position = "bottomleft",
                             width = 200,
@@ -315,20 +330,34 @@ shinyApp(
                              fillColor = "transparent",
                              fillOpacity = 1.0,
                              label = ~lakes.resolvable$GNIS_Name,
+                             labelOptions = labelOptions(style = list("font-size" = "18px",
+                                                                      "color" = "blue")),
                              options = pathOptions(pane = "lakes.resolvable"))%>% 
-        leaflet::addPolygons(data = lakes.oregon, 
-                             color = "blue",
-                             weight = 0,
-                             layer = ~lakes.oregon$GNIS_Name,
+        leaflet::addPolygons(data = huc8, 
+                             group = "Hydrologic Unit 8 (HU8)",
+                             color = "purple",
+                             weight = 2,
                              smoothFactor = 0.5,
                              opacity = 0.5,
                              fillColor = "transparent",
                              fillOpacity = 1.0,
-                             label = ~lakes.oregon$GNIS_Name,
-                             options = pathOptions(pane = "lakes.oregon")) %>% 
-        leaflet::addScaleBar(position = c("bottomright"),
-                             options = scaleBarOptions()
-        )
+                             label = ~huc8$HU_8_NAME,
+                             labelOptions = labelOptions(style = list("font-size" = "18px",
+                                                                      "color" = "purple",
+                                                                      "box-shadow" = "3px 3px rgba(0,0,0,0.25)",
+                                                                      "border-color" = "rgba(0,0,0,0.5)")),
+                             options = pathOptions(pane = "HUC8"))%>% 
+        leaflet::addPolygons(data = state.boundary, 
+                             color = "black",
+                             weight = 2,
+                             fillColor = "transparent",
+                             fillOpacity = 1.0,
+                             options = pathOptions(pane = "state.boundary")) %>% 
+        leaflet::addLayersControl(baseGroups = c("OpenStreetMap","National Geographic World Map"),
+                                  overlayGroups = c("Hydrologic Unit 8 (HU8)","Land Cover (NLCD 2016)"),
+                                  position = "topleft",
+                                  options = layersControlOptions(collapsed = TRUE, autoZIndex = FALSE)) %>% 
+        leaflet::hideGroup(c("HUC8","Land Cover (NLCD 2016)"))
       
     })
     
@@ -370,6 +399,7 @@ shinyApp(
         
         lookup.date %>% 
           dplyr::filter(Date %in% as.Date(input$date_map)) %>% 
+          dplyr::mutate(Day.dta = ifelse(Day.dta < 100, paste0("0",as.character(Day.dta)),Day.dta)) %>% 
           dplyr::mutate(map_day = paste0(Year.dta,Day.dta))
         
       })
@@ -379,7 +409,7 @@ shinyApp(
         return(NULL)
         
       } else {
-
+        
         map.tif.dir <- reactive(paste0("./data/", df.map.date()$Year.dta, "/"))
         
         file.name <- reactive(paste0(df.map.date()$map_day,".tif"))
@@ -393,10 +423,18 @@ shinyApp(
         leafletProxy("map") %>% 
           leaflet::clearImages() %>% 
           leaflet::clearControls() %>% 
-          leaflet::addRasterImage(rst(), project = FALSE, colors=pal.map, opacity = 1) %>% 
+          leaflet::addRasterImage(rst(), layerId = "Value", project = TRUE, colors=pal.map, opacity = 1) %>% 
+          leafem::addMouseCoordinates() %>% 
+          leafem::addImageQuery(rst(), layerId = "Value", project = TRUE, type = "mousemove",
+                                position="topright",prefix = "") %>% 
           leaflet::addLegend(pal = pal.map, values = thevalues, title = "Cyanobacteria (cells/mL)", position = "topright",
-                             labFormat = function(type,cuts,p){paste0(labels)})
-        
+                             labFormat = function(type,cuts,p){paste0(labels)}) %>% 
+          leaflet::addLayersControl(overlayGroups = c("Hydrologic Unit 8 (HU8)","Land Cover (NLCD 2016)","Value"),
+                                    baseGroups = c("OpenStreetMap","National Geographic World Map"),
+                                    position = "topleft",
+                                    options = layersControlOptions(collapsed = TRUE, autoZIndex = FALSE)) %>% 
+          leaflet::hideGroup(c("Hydrologic Unit 8 (HU8)","Land Cover (NLCD 2016)"))
+  
       } 
       
     })
@@ -599,7 +637,7 @@ shinyApp(
       
       df() %>% 
         dplyr::select(GNISIDNAME,Date,`Cyanobacteria (cells/mL)`,`Summary Statistics`) %>% 
-        dplyr::mutate(`Cyanobacteria (cells/mL)` = ifelse(`Cyanobacteria (cells/mL)` <= 6310, "Not Detected",
+        dplyr::mutate(`Cyanobacteria (cells/mL)` = ifelse(`Cyanobacteria (cells/mL)` <= 6310, "Non-detect",
                                                           scales::comma(`Cyanobacteria (cells/mL)`))) %>%
         dplyr::rename(Waterbody_GNISID = GNISIDNAME)
     })
@@ -647,7 +685,7 @@ shinyApp(
       
       dta %>% 
         dplyr::filter(GNISIDNAME %in% input$waterbody) %>% 
-        dplyr::mutate(dwsa = ifelse(wi_DWSA == "Yes", "within a drinking water source area.", "not within a drinking water source area.")) %>% 
+        dplyr::mutate(dwsa = ifelse(wi_DWSA == "Yes", "within a public drinking water source area.", "not within a public drinking water source area.")) %>% 
         pull(dwsa)
       
     })
@@ -656,7 +694,7 @@ shinyApp(
       
       if(input$waterbody == c("Oregon")) {}
       else {
-        paste0("The waterbody is ",unique(dw())) 
+        paste0("The selected waterbody is ",unique(dw())) 
       }
     })
     

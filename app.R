@@ -298,22 +298,22 @@ shinyApp(
       leaflet::leaflet() %>% 
         leaflet::addMapPane("OpenStreetMap", zIndex = -40) %>% 
         leaflet::addMapPane("National Geographic World Map", zIndex = -40) %>%
-        leaflet::addMapPane("Tiles", zIndex = -40) %>%
+        #leaflet::addMapPane("Tiles", zIndex = -40) %>%
         leaflet::addMapPane("state.boundary", zIndex = -30) %>%
-        leaflet::addMapPane("HUC8",zIndex = -20) %>% 
+        #leaflet::addMapPane("HUC8",zIndex = -20) %>% 
         leaflet::addMapPane("lakes.resolvable", zIndex = -10) %>%
         #leaflet::addMapPane("raster", zIndex = 450) %>%
         leaflet::addProviderTiles("OpenStreetMap",group = "OpenStreetMap",
                                   options = pathOptions(pane = "OpenStreetMap")) %>% 
         leaflet::addProviderTiles(providers$Esri.NatGeoWorldMap,group = "National Geographic World Map",
                                   options = pathOptions(pane = "National Geographic World Map")) %>% 
-        leaflet::addWMSTiles(baseUrl = 'https://www.mrlc.gov/geoserver/mrlc_display/NLCD_2016_Land_Cover_L48/wms?',
-                             group = "Land Cover (NLCD 2016)",
-                             layers = "NLCD_2016_Land_Cover_L48",
-                             options = leaflet::WMSTileOptions(version = '1.3.0',
-                                                               format = 'image/png',
-                                                               transparent = TRUE,
-                                                               pane = "Tiles")) %>%
+        #leaflet::addWMSTiles(baseUrl = 'https://www.mrlc.gov/geoserver/mrlc_display/NLCD_2016_Land_Cover_L48/wms?',
+        #                     group = "Land Cover (NLCD 2016)",
+        #                     layers = "NLCD_2016_Land_Cover_L48",
+        #                     options = leaflet::WMSTileOptions(version = '1.3.0',
+        #                                                       format = 'image/png',
+        #                                                       transparent = TRUE,
+        #                                                       pane = "Tiles")) %>%
         leaflet.extras::addResetMapButton() %>% 
         leaflet::addScaleBar(position = c("bottomright"),
                              options = scaleBarOptions()) %>% 
@@ -334,20 +334,20 @@ shinyApp(
                              labelOptions = labelOptions(style = list("font-size" = "18px",
                                                                       "color" = "blue")),
                              options = pathOptions(pane = "lakes.resolvable"))%>% 
-        leaflet::addPolygons(data = huc8, 
-                             group = "Hydrologic Unit 8 (HU8)",
-                             color = "purple",
-                             weight = 2,
-                             smoothFactor = 0.5,
-                             opacity = 0.5,
-                             fillColor = "transparent",
-                             fillOpacity = 1.0,
-                             label = ~huc8$HU_8_NAME,
-                             labelOptions = labelOptions(style = list("font-size" = "18px",
-                                                                      "color" = "purple",
-                                                                      "box-shadow" = "3px 3px rgba(0,0,0,0.25)",
-                                                                      "border-color" = "rgba(0,0,0,0.5)")),
-                             options = pathOptions(pane = "HUC8"))%>% 
+        #leaflet::addPolygons(data = huc8, 
+        #                     group = "Hydrologic Unit 8 (HU8)",
+        #                     color = "purple",
+        #                     weight = 2,
+        #                     smoothFactor = 0.5,
+        #                     opacity = 0.5,
+        #                     fillColor = "transparent",
+        #                     fillOpacity = 1.0,
+        #                     label = ~huc8$HU_8_NAME,
+        #                     labelOptions = labelOptions(style = list("font-size" = "18px",
+        #                                                              "color" = "purple",
+        #                                                              "box-shadow" = "3px 3px rgba(0,0,0,0.25)",
+        #                                                              "border-color" = "rgba(0,0,0,0.5)")),
+        #                     options = pathOptions(pane = "HUC8"))%>% 
         leaflet::addPolygons(data = state.boundary, 
                              color = "black",
                              weight = 2,
@@ -355,10 +355,10 @@ shinyApp(
                              fillOpacity = 1.0,
                              options = pathOptions(pane = "state.boundary")) %>% 
         leaflet::addLayersControl(baseGroups = c("OpenStreetMap","National Geographic World Map"),
-                                  overlayGroups = c("Hydrologic Unit 8 (HU8)","Land Cover (NLCD 2016)"),
+                                  #overlayGroups = c("Hydrologic Unit 8 (HU8)","Land Cover (NLCD 2016)"),
                                   position = "topleft",
-                                  options = layersControlOptions(collapsed = TRUE, autoZIndex = FALSE)) %>% 
-        leaflet::hideGroup(c("HUC8","Land Cover (NLCD 2016)"))
+                                  options = layersControlOptions(collapsed = TRUE, autoZIndex = FALSE)) #%>% 
+        #leaflet::hideGroup(c("HUC8","Land Cover (NLCD 2016)"))
       
     })
     
@@ -425,16 +425,16 @@ shinyApp(
           leaflet::clearImages() %>% 
           leaflet::clearControls() %>% 
           leaflet::addRasterImage(rst(), layerId = "Value", project = TRUE, colors=pal.map, opacity = 1) %>% 
-          leafem::addMouseCoordinates() %>% 
-          leafem::addImageQuery(rst(), layerId = "Value", project = TRUE, type = "mousemove",
-                                position="topright",prefix = "") %>% 
+          #leafem::addMouseCoordinates() %>% 
+          #leafem::addImageQuery(rst(), layerId = "Value", project = TRUE, type = "mousemove",
+          #                      position="topright",prefix = "") %>% 
           leaflet::addLegend(pal = pal.map, values = thevalues, title = "Cyanobacteria (cells/mL)", position = "topright",
                              labFormat = function(type,cuts,p){paste0(labels)}) %>% 
-          leaflet::addLayersControl(overlayGroups = c("Hydrologic Unit 8 (HU8)","Land Cover (NLCD 2016)","Value"),
+          leaflet::addLayersControl(#overlayGroups = c("Hydrologic Unit 8 (HU8)","Land Cover (NLCD 2016)","Value"),
                                     baseGroups = c("OpenStreetMap","National Geographic World Map"),
                                     position = "topleft",
-                                    options = layersControlOptions(collapsed = TRUE, autoZIndex = FALSE)) %>% 
-          leaflet::hideGroup(c("Hydrologic Unit 8 (HU8)","Land Cover (NLCD 2016)"))
+                                    options = layersControlOptions(collapsed = TRUE, autoZIndex = FALSE)) #%>% 
+          #leaflet::hideGroup(c("Hydrologic Unit 8 (HU8)","Land Cover (NLCD 2016)"))
   
       } 
       

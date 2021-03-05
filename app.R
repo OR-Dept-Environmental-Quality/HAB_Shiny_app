@@ -4,6 +4,7 @@ library(shinyWidgets)
 library(shinythemes)
 library(shinydashboard)
 library(shinydashboardPlus)
+library(shinyEffects)
 library(raster)
 library(leaflet)
 library(leaflet.extras)
@@ -316,8 +317,8 @@ shinyApp(
         leaflet.extras::addResetMapButton() %>% 
         leaflet::addScaleBar(position = c("bottomright"),
                              options = scaleBarOptions()) %>% 
-        leaflet::setView(lng = -121, lat = 44, zoom=7) %>%
-        leaflet::addMiniMap(position = "bottomleft",
+        leaflet::setView(lng = -120, lat = 44, zoom=7) %>%
+        leaflet::addMiniMap(position = "bottomright",
                             width = 200,
                             height = 200,
                             zoomLevelFixed = 5) %>% 
@@ -368,7 +369,7 @@ shinyApp(
       if(input$waterbody == c("Oregon")) {
         
         leafletProxy("map") %>% 
-          leaflet::setView(lng = -121, lat = 44, zoom=7)
+          leaflet::setView(lng = -120, lat = 44, zoom=7)
         
       } else {
         

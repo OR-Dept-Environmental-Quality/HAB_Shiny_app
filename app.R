@@ -140,7 +140,7 @@ shinyApp(
         solidHeader = TRUE,
         
         tags$img(src = "DEQ-logo-color-horizontal370x73.png"),
-        tags$div(span("Freshwater Cyanobacteria Harmful Algal Blooms in Oregon",
+        tags$div(span("Freshwater Harmful Algal Blooms in Oregon",
                       style = "color: black; font-size: 40px")),
         tags$div(span(HTML(paste0("A Map Application of ",
                                   a("U.S. EPA CyAN Project", 

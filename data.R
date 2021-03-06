@@ -62,9 +62,9 @@ lakes.resolvable <- rgdal::readOGR(dsn = "./data/NHDwaterbody_resolvable_lakes_d
 state.boundary <- sf::st_read("./data/state_boundary_blm.shp") %>% 
   st_transform(crs="+init=epsg:4326")
 
-huc8 <- sf::st_read("./data/wbd_hu8.shp") %>% 
-  st_transform(crs="+init=epsg:4326") %>% 
-  st_intersection(state.boundary)
+#huc8 <- sf::st_read("./data/wbd_hu8.shp") %>% 
+#  st_transform(crs="+init=epsg:4326") %>% 
+#  st_intersection(state.boundary)
 
 #ggplot() +
 #  geom_sf(data=huc8) +

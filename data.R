@@ -6,6 +6,7 @@ library(sf)
 library(raster)
 library(leaflet)
 library(RColorBrewer)
+library(rasterVis)
 
 # setwd("//deqhq1/WQ-Share/Harmful Algal Blooms Coordination Team/HAB_Shiny_app")
 
@@ -68,8 +69,15 @@ state.boundary <- sf::st_read("./data/state_boundary_blm.shp") %>%
 # Raster color 
 #thevalues <-c(0,6310,18000,43000,61500,84000,100000,130000,1000000)
 thevalues <-c(0,6310,13000,25000,50000,100000,200000,400000,800000,1000000,3000000,6000000,7000000)
+#non_detect <- "#B3B3B3" # gray color
+#detect <- RColorBrewer::brewer.pal(9,"YlOrRd")
+#thecolor <- rasterVis::rasterTheme(region = c(non_detect,detect))
 
-pal.map <- leaflet::colorBin(palette = grDevices::colorRampPalette(RColorBrewer::brewer.pal(9,"YlOrRd"))(12),
+paletteFunc <- grDevices::colorRampPalette(c('gray','yellow','orange','dark red'))
+palette     <- paletteFunc(12)
+
+
+pal.map <- leaflet::colorBin(palette = palette,
                              bins = c(0,6310,13000,25000,50000,100000,200000,400000,800000,1000000,3000000,6000000,7000000),
                              domain = c(0,6310,13000,25000,50000,100000,200000,400000,800000,1000000,3000000,6000000,7000000),
                              na.color = "transparent")

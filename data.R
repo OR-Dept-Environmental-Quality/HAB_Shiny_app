@@ -10,34 +10,32 @@ library(RColorBrewer)
 # setwd("//deqhq1/WQ-Share/Harmful Algal Blooms Coordination Team/HAB_Shiny_app")
 
 # (1) Plot and Table ----
-dta1 <- readxl::read_xlsx("./data/HAB_resolvablelakes_2016_to_2019.xlsx",
-                          sheet = "HAB_resolvablelakes_2016_2020") %>% 
-  dplyr::mutate(wi_DWSA = NA)
+dta1 <- readxl::read_xlsx("./data/HAB_resolvablelakes_2016_2020.xlsx",
+                          sheet = "HAB_resolvablelakes_2016_2020")
 
-dta2 <- readxl::read_xlsx("./data/HAB_resolvablelakes_2020.xlsx",
-                          sheet = "HAB_resolvable_toAug262020") %>% 
-  dplyr::select(-"...13")
+dta2 <- readxl::read_xlsx("./data/HAB_resolvablelakes_2021.xlsx",
+                          sheet = "HAB_resolvable_toMar182021")
 
-dta3 <- readxl::read_xlsx("./data/HAB_resolvablelakes_2020.xlsx",
-                          sheet = "NHDWaterbody_resolvable_inDWSA")
+dta3 <- readxl::read_xlsx("./data/Resolvable_Lakes.xlsx",
+                          sheet = "cyan_resolvable_lakes")
 
-GNISNameID <- unique(sort(dta3$GNIS_Name_ID...1))
+GNISNameID <- unique(sort(dta3$wi_DWSA))
 
 dta <- rbind(dta1,dta2) %>% 
   dplyr::rename(Mean = MEAN_cellsml,
                 Maximum = MAX_cellsml,
                 Minimum = MIN_cellsml) %>% 
-  tidyr::gather(`Summary Statistics`, `Cyanobacteria (cells/mL)`, -GNISIDNAME,-COUNT,-AREA,-PercentArea_Value, -Day,-Year,-Date,-wi_DWSA) %>% 
+  tidyr::gather(`Summary Statistics`, `Cyanobacteria (cells/mL)`, -GNISIDNAME,-COUNT,-AREA,-PercentArea_Value, -Day,-Year,-Date) %>% 
   tidyr::separate(GNISIDNAME,c("GNISNAME","GNISID"), sep="_") %>% 
   dplyr::mutate(GNISIDNAME = paste0(GNISNAME,"_",GNISID)) %>% 
   dplyr::mutate(Date = lubridate::ymd(Date)) %>% 
   dplyr::arrange(desc(Date)) %>% 
   dplyr::mutate(wi_DWSA = ifelse(GNISIDNAME %in% GNISNameID, "Yes", "No")) %>% 
-  dplyr::filter(!GNISIDNAME == "Goose Lake_01520146")
+  dplyr::filter(!GNISIDNAME == "Goose Lake_01520146") # located in the WA state
 
 # (2) Date Lookup Table ----
-fulldays <- readxl::read_xlsx("./data/2016-2020.xlsx",
-                              sheet = "2016-2020") %>% 
+fulldays <- readxl::read_xlsx("./data/calendar-dates.xlsx",
+                              sheet = "calendar-dates") %>% 
   dplyr::mutate(Date = lubridate::ymd(Date))
 
 lookup.date <- dta %>% 
@@ -61,10 +59,6 @@ lakes.resolvable <- rgdal::readOGR(dsn = "./data/NHDwaterbody_resolvable_lakes_d
 
 state.boundary <- sf::st_read("./data/state_boundary_blm.shp") %>% 
   st_transform(crs="+init=epsg:4326")
-
-#huc8 <- sf::st_read("./data/wbd_hu8.shp") %>% 
-#  st_transform(crs="+init=epsg:4326") %>% 
-#  st_intersection(state.boundary)
 
 #ggplot() +
 #  geom_sf(data=huc8) +

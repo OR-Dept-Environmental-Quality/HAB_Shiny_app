@@ -51,6 +51,52 @@ lookup.date <- dta %>%
 missing.dates <- lookup.date %>% 
   dplyr::filter(is.na(Day.dta))
 
+# Missing data will be only used for the Time series plot when it plots with breaks (to-be-deleted)
+missing.data.mean <- missing.dates %>% 
+  dplyr::select(Date,-Year) %>% 
+  dplyr::mutate(GNISNAME = NULL,
+                GNISID = NULL,
+                COUNT = NA,
+                AREA = NULL,
+                PercentArea_Value = NA,
+                Day = NA,
+                Year = NA,
+                `Summary Statistics` = "Mean",
+                `Cyanobacteria (cells/mL)` = NA,
+                GNISIDNAME = NULL,
+                wi_DWSA = NULL)
+
+missing.data.min <- missing.dates %>% 
+  dplyr::select(Date) %>% 
+  dplyr::mutate(GNISNAME = NULL,
+                GNISID = NULL,
+                COUNT = NA,
+                AREA = NULL,
+                PercentArea_Value = NA,
+                Day = NA,
+                Year = NA,
+                `Summary Statistics` = "Minimum",
+                `Cyanobacteria (cells/mL)` = NA,
+                GNISIDNAME = NULL,
+                wi_DWSA = NULL)
+
+missing.data.max <- missing.dates %>% 
+  dplyr::select(Date) %>% 
+  dplyr::mutate(GNISNAME = NULL,
+                GNISID = NULL,
+                COUNT = NA,
+                AREA = NULL,
+                PercentArea_Value = NA,
+                Day = NA,
+                Year = NA,
+                `Summary Statistics` = "Maximum",
+                `Cyanobacteria (cells/mL)` = NA,
+                GNISIDNAME = NULL,
+                wi_DWSA = NULL)
+
+missing.data <- rbind(missing.data.mean,missing.data.min,missing.data.max)
+  
+
 # (3) Map: shapefile ----
 lakes.resolvable <- rgdal::readOGR(dsn = "./data/NHDwaterbody_resolvable_lakes_dissolved_oregon_clean.shp",
                                    layer = "NHDwaterbody_resolvable_lakes_dissolved_oregon_clean")

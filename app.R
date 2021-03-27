@@ -345,20 +345,20 @@ shinyApp(
         #                     label = ~huc8$HU_8_NAME,
         #                     labelOptions = labelOptions(style = list("font-size" = "18px",
         #                                                              "color" = "purple",
-        #                                                              "box-shadow" = "3px 3px rgba(0,0,0,0.25)",
-        #                                                              "border-color" = "rgba(0,0,0,0.5)")),
-        #                     options = pathOptions(pane = "HUC8"))%>% 
-        leaflet::addPolygons(data = state.boundary, 
-                             color = "black",
-                             weight = 2,
-                             fillColor = "transparent",
-                             fillOpacity = 1.0,
-                             options = pathOptions(pane = "state.boundary")) %>% 
+      #                                                              "box-shadow" = "3px 3px rgba(0,0,0,0.25)",
+      #                                                              "border-color" = "rgba(0,0,0,0.5)")),
+      #                     options = pathOptions(pane = "HUC8"))%>% 
+      leaflet::addPolygons(data = state.boundary, 
+                           color = "black",
+                           weight = 2,
+                           fillColor = "transparent",
+                           fillOpacity = 1.0,
+                           options = pathOptions(pane = "state.boundary")) %>% 
         leaflet::addLayersControl(baseGroups = c("OpenStreetMap","National Geographic World Map"),
                                   #overlayGroups = c("Hydrologic Unit 8 (HU8)","Land Cover (NLCD 2016)"),
                                   position = "topleft",
                                   options = layersControlOptions(collapsed = TRUE, autoZIndex = FALSE)) #%>% 
-        #leaflet::hideGroup(c("HUC8","Land Cover (NLCD 2016)"))
+      #leaflet::hideGroup(c("HUC8","Land Cover (NLCD 2016)"))
       
     })
     
@@ -425,18 +425,18 @@ shinyApp(
           leaflet::clearImages() %>% 
           leaflet::clearControls() %>% 
           leaflet::addRasterImage(rst(), layerId = "Value", project = FALSE, colors=pal.map, opacity = 1) %>% 
-          leafem::addMouseCoordinates() %>% 
-          leafem::addImageQuery(rst(), layerId = "Value", digits = 0, project = TRUE, type = "mousemove",
-                                position="topright",prefix = "") %>% 
+          #leafem::addMouseCoordinates() %>% 
+          #leafem::addImageQuery(rst(), layerId = "Value", digits = 0, project = TRUE, type = "mousemove",
+          #                      position="topright",prefix = "") %>% 
           leaflet::addLegend(pal = pal.map, values = thevalues, title = "Cyanobacteria (cells/mL)", position = "topright",
                              labFormat = function(type,cuts,p){paste0(labels)}) %>% 
           leaflet::addLayersControl(#overlayGroups = c("Hydrologic Unit 8 (HU8)","Land Cover (NLCD 2016)","Value"),
-                                    overlayGroups = c("Value"),
-                                    baseGroups = c("OpenStreetMap","National Geographic World Map"),
-                                    position = "topleft",
-                                    options = layersControlOptions(collapsed = TRUE, autoZIndex = FALSE)) #%>% 
-          #leaflet::hideGroup(c("Hydrologic Unit 8 (HU8)","Land Cover (NLCD 2016)"))
-  
+            #overlayGroups = c("Value"),
+            baseGroups = c("OpenStreetMap","National Geographic World Map"),
+            position = "topleft",
+            options = layersControlOptions(collapsed = TRUE, autoZIndex = FALSE)) #%>% 
+        #leaflet::hideGroup(c("Hydrologic Unit 8 (HU8)","Land Cover (NLCD 2016)"))
+        
       } 
       
     })
@@ -605,6 +605,8 @@ shinyApp(
         split = ~`Summary Statistics`,
         type = "scatter",
         mode = "lines",
+        #connectgaps = FALSE,
+        #type = "bar",
         color = ~`Summary Statistics`,
         colors = pal.plot,
         legendgroup = "sta") %>% 

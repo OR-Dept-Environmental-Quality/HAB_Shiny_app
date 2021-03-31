@@ -179,17 +179,6 @@ shinyApp(
                            datesdisabled = missing.dates$Date),
           
           # __ Select a Waterbody ----
-          #shinyWidgets::pickerInput(inputId = "waterbody",
-          #                          label = tags$h4("Select a Waterbody:"),
-          #                          choices = list(
-          #                            "Oregon",
-          #                            "Within Drinking Water Source Area" = 
-          #                              unique(sort(dta[which(dta$wi_DWSA == c("Yes")),]$GNISIDNAME)),
-          #                            "Not-Within Drinking Water Source Area" = 
-          #                              unique(sort(dta[which(dta$wi_DWSA == c("No")),]$GNISIDNAME))
-          #                          ),
-          #                          multiple = FALSE),
-          
           shinyWidgets::pickerInput(inputId = "waterbody",
                                     label = tags$h4("Select a Waterbody:"),
                                     choices = list(
@@ -201,7 +190,6 @@ shinyApp(
           shiny::textOutput("dw"),
           
           tags$hr(),
-          
           
           # __ Boxplot ----
           HTML(paste(
@@ -557,15 +545,9 @@ shinyApp(
       
       plotly::plot_ly(
         data = df_data(),
-        #x = ~ mth,
-        #x = ~ yr,
         x = ~ df_data()[[input$mthyr]],
         y = ~`Data Count`,
-        #group = ~`Summary Statistics`,
         type = "bar",
-        #mode = "lines",
-        #color = ~`Summary Statistics`,
-        #colors = pal.plot,
         marker = list(color = "light-blue")) %>% 
         plotly::layout(yaxis = list(title = "Sample Counts"),
                        xaxis = list(title = "Month",

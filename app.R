@@ -141,12 +141,13 @@ shinyApp(
         
         tags$img(src = "DEQ-logo-color-horizontal370x73.png"),
         tags$div(span("Freshwater Harmful Algal Blooms in Oregon",
-                      style = "color: black; font-size: 40px")),
-        tags$div(span(HTML(paste0("A Map Application for cyanobacteria blooms from the ",
-                                  a("U.S. EPA CyAN Project", 
-                                    href="https://www.epa.gov/water-research/cyanobacteria-assessment-network-cyan"))),
-                      style = "color: black; font-size: 20px")),
-        tags$br(),
+                      style = "color: black; font-size: 40px"))
+        #,
+        #tags$div(span(HTML(paste0("A Map Application for cyanobacteria blooms from the ",
+        #                          a("U.S. EPA CyAN Project", 
+        #                            href="https://www.epa.gov/water-research/cyanobacteria-assessment-network-cyan"))),
+        #              style = "color: black; font-size: 20px")),
+        #tags$br(),
       ), # Header box END 
       
       # _ Part 1: Mapping data ----
@@ -577,8 +578,7 @@ shinyApp(
       dta %>% 
         dplyr::filter(GNISIDNAME %in% input$waterbody) %>% 
         dplyr::filter(`Summary Statistics` %in% input$matrix) %>% 
-        dplyr::filter(Date >= input$date_plot[1],Date <= input$date_plot[2]) %>% 
-        dplyr::mutate(who = as.numeric("100000"))
+        dplyr::filter(Date >= input$date_plot[1],Date <= input$date_plot[2])
       
     })
     
@@ -598,23 +598,26 @@ shinyApp(
     
     output$plot_cell <- renderPlotly({
       
-      plotly::plot_ly(
-        data = df(),
-        x = ~as.Date(Date),
-        y = ~`Cyanobacteria (cells/mL)`,
-        split = ~`Summary Statistics`,
-        type = "scatter",
-        mode = "lines",
-        #connectgaps = FALSE,
-        #type = "bar",
-        color = ~`Summary Statistics`,
-        colors = pal.plot,
-        legendgroup = "sta") %>% 
+      plotly::plot_ly(data = df(), x = ~as.Date(Date)) %>% 
+        plotly::add_trace(y = ~`Cyanobacteria (cells/mL)`,
+                          split = ~`Summary Statistics`,
+                          type = "scatter",
+                          mode = "lines+markers",
+                          #connectgaps = TRUE,
+                          color = ~`Summary Statistics`,
+                          colors = pal.plot,
+                          marker = list(size = 8),
+                          legendgroup = "sta") %>% 
         plotly::layout(xaxis = list(title = "Date", range = c(min(df()$Date),max(df()$Date))),
                        # yaxis = list(title = "Cyanobacteria (cells/mL)"),
                        title = as.character(unique(df()$GNISIDNAME))) %>% 
         plotly::layout(yaxis = list(type = type(),
                                     title = yaxis())) %>% 
+        plotly::add_trace(y = 100000, mode = "lines",
+                          line = list(shape = 'spline', color = 'red', width = 3),
+                          name = "WHO Threshold",
+                          legendgroup = "who",
+                          showlegend = FALSE) %>% 
         plotly::layout(annotations = list(x = max(df()$Date),
                                           y = 100000,
                                           text = "WHO Threshold",
@@ -625,12 +628,7 @@ shinyApp(
                                           arrowhead = 3,
                                           arrowsize = 1,
                                           ax = -60,
-                                          ay = -20)) %>% 
-        add_trace(y = ~df()$who, type = "scatter", mode = "lines",
-                  line = list(color = "red"),
-                  name = "WHO Threshold",
-                  legendgroup = "who",
-                  showlegend = FALSE)
+                                          ay = -20))
       
     })
     

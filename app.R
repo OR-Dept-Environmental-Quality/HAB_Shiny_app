@@ -141,12 +141,13 @@ shinyApp(
         
         tags$img(src = "DEQ-logo-color-horizontal370x73.png"),
         tags$div(span("Freshwater Harmful Algal Blooms in Oregon",
-                      style = "color: black; font-size: 40px")),
-        tags$div(span(HTML(paste0("A Map Application for cyanobacteria blooms from the ",
-                                  a("U.S. EPA CyAN Project", 
-                                    href="https://www.epa.gov/water-research/cyanobacteria-assessment-network-cyan"))),
-                      style = "color: black; font-size: 20px")),
-        tags$br(),
+                      style = "color: black; font-size: 40px"))
+        #,
+        #tags$div(span(HTML(paste0("A Map Application for cyanobacteria blooms from the ",
+        #                          a("U.S. EPA CyAN Project", 
+        #                            href="https://www.epa.gov/water-research/cyanobacteria-assessment-network-cyan"))),
+        #              style = "color: black; font-size: 20px")),
+        #tags$br(),
       ), # Header box END 
       
       # _ Part 1: Mapping data ----
@@ -178,17 +179,6 @@ shinyApp(
                            datesdisabled = missing.dates$Date),
           
           # __ Select a Waterbody ----
-          #shinyWidgets::pickerInput(inputId = "waterbody",
-          #                          label = tags$h4("Select a Waterbody:"),
-          #                          choices = list(
-          #                            "Oregon",
-          #                            "Within Drinking Water Source Area" = 
-          #                              unique(sort(dta[which(dta$wi_DWSA == c("Yes")),]$GNISIDNAME)),
-          #                            "Not-Within Drinking Water Source Area" = 
-          #                              unique(sort(dta[which(dta$wi_DWSA == c("No")),]$GNISIDNAME))
-          #                          ),
-          #                          multiple = FALSE),
-          
           shinyWidgets::pickerInput(inputId = "waterbody",
                                     label = tags$h4("Select a Waterbody:"),
                                     choices = list(
@@ -200,7 +190,6 @@ shinyApp(
           shiny::textOutput("dw"),
           
           tags$hr(),
-          
           
           # __ Boxplot ----
           HTML(paste(
@@ -345,20 +334,20 @@ shinyApp(
         #                     label = ~huc8$HU_8_NAME,
         #                     labelOptions = labelOptions(style = list("font-size" = "18px",
         #                                                              "color" = "purple",
-        #                                                              "box-shadow" = "3px 3px rgba(0,0,0,0.25)",
-        #                                                              "border-color" = "rgba(0,0,0,0.5)")),
-        #                     options = pathOptions(pane = "HUC8"))%>% 
-        leaflet::addPolygons(data = state.boundary, 
-                             color = "black",
-                             weight = 2,
-                             fillColor = "transparent",
-                             fillOpacity = 1.0,
-                             options = pathOptions(pane = "state.boundary")) %>% 
+      #                                                              "box-shadow" = "3px 3px rgba(0,0,0,0.25)",
+      #                                                              "border-color" = "rgba(0,0,0,0.5)")),
+      #                     options = pathOptions(pane = "HUC8"))%>% 
+      leaflet::addPolygons(data = state.boundary, 
+                           color = "black",
+                           weight = 2,
+                           fillColor = "transparent",
+                           fillOpacity = 1.0,
+                           options = pathOptions(pane = "state.boundary")) %>% 
         leaflet::addLayersControl(baseGroups = c("OpenStreetMap","National Geographic World Map"),
                                   #overlayGroups = c("Hydrologic Unit 8 (HU8)","Land Cover (NLCD 2016)"),
                                   position = "topleft",
                                   options = layersControlOptions(collapsed = TRUE, autoZIndex = FALSE)) #%>% 
-        #leaflet::hideGroup(c("HUC8","Land Cover (NLCD 2016)"))
+      #leaflet::hideGroup(c("HUC8","Land Cover (NLCD 2016)"))
       
     })
     
@@ -424,18 +413,19 @@ shinyApp(
         leafletProxy("map") %>% 
           leaflet::clearImages() %>% 
           leaflet::clearControls() %>% 
-          leaflet::addRasterImage(rst(), layerId = "Value", project = TRUE, colors=pal.map, opacity = 1) %>% 
+          leaflet::addRasterImage(rst(), layerId = "Value", project = FALSE, colors=pal.map, opacity = 1) %>% 
           #leafem::addMouseCoordinates() %>% 
-          #leafem::addImageQuery(rst(), layerId = "Value", project = TRUE, type = "mousemove",
+          #leafem::addImageQuery(rst(), layerId = "Value", digits = 0, project = TRUE, type = "mousemove",
           #                      position="topright",prefix = "") %>% 
           leaflet::addLegend(pal = pal.map, values = thevalues, title = "Cyanobacteria (cells/mL)", position = "topright",
                              labFormat = function(type,cuts,p){paste0(labels)}) %>% 
           leaflet::addLayersControl(#overlayGroups = c("Hydrologic Unit 8 (HU8)","Land Cover (NLCD 2016)","Value"),
-                                    baseGroups = c("OpenStreetMap","National Geographic World Map"),
-                                    position = "topleft",
-                                    options = layersControlOptions(collapsed = TRUE, autoZIndex = FALSE)) #%>% 
-          #leaflet::hideGroup(c("Hydrologic Unit 8 (HU8)","Land Cover (NLCD 2016)"))
-  
+            #overlayGroups = c("Value"),
+            baseGroups = c("OpenStreetMap","National Geographic World Map"),
+            position = "topleft",
+            options = layersControlOptions(collapsed = TRUE, autoZIndex = FALSE)) #%>% 
+        #leaflet::hideGroup(c("Hydrologic Unit 8 (HU8)","Land Cover (NLCD 2016)"))
+        
       } 
       
     })
@@ -555,15 +545,9 @@ shinyApp(
       
       plotly::plot_ly(
         data = df_data(),
-        #x = ~ mth,
-        #x = ~ yr,
         x = ~ df_data()[[input$mthyr]],
         y = ~`Data Count`,
-        #group = ~`Summary Statistics`,
         type = "bar",
-        #mode = "lines",
-        #color = ~`Summary Statistics`,
-        #colors = pal.plot,
         marker = list(color = "light-blue")) %>% 
         plotly::layout(yaxis = list(title = "Sample Counts"),
                        xaxis = list(title = "Month",
@@ -576,8 +560,7 @@ shinyApp(
       dta %>% 
         dplyr::filter(GNISIDNAME %in% input$waterbody) %>% 
         dplyr::filter(`Summary Statistics` %in% input$matrix) %>% 
-        dplyr::filter(Date >= input$date_plot[1],Date <= input$date_plot[2]) %>% 
-        dplyr::mutate(who = as.numeric("100000"))
+        dplyr::filter(Date >= input$date_plot[1],Date <= input$date_plot[2])
       
     })
     
@@ -597,21 +580,26 @@ shinyApp(
     
     output$plot_cell <- renderPlotly({
       
-      plotly::plot_ly(
-        data = df(),
-        x = ~as.Date(Date),
-        y = ~`Cyanobacteria (cells/mL)`,
-        split = ~`Summary Statistics`,
-        type = "scatter",
-        mode = "lines",
-        color = ~`Summary Statistics`,
-        colors = pal.plot,
-        legendgroup = "sta") %>% 
+      plotly::plot_ly(data = df(), x = ~as.Date(Date)) %>% 
+        plotly::add_trace(y = ~`Cyanobacteria (cells/mL)`,
+                          split = ~`Summary Statistics`,
+                          type = "scatter",
+                          mode = "lines+markers",
+                          #connectgaps = TRUE,
+                          color = ~`Summary Statistics`,
+                          colors = pal.plot,
+                          marker = list(size = 8),
+                          legendgroup = "sta") %>% 
         plotly::layout(xaxis = list(title = "Date", range = c(min(df()$Date),max(df()$Date))),
                        # yaxis = list(title = "Cyanobacteria (cells/mL)"),
                        title = as.character(unique(df()$GNISIDNAME))) %>% 
         plotly::layout(yaxis = list(type = type(),
                                     title = yaxis())) %>% 
+        plotly::add_trace(y = 100000, mode = "lines",
+                          line = list(shape = 'spline', color = 'red', width = 3),
+                          name = "WHO Threshold",
+                          legendgroup = "who",
+                          showlegend = FALSE) %>% 
         plotly::layout(annotations = list(x = max(df()$Date),
                                           y = 100000,
                                           text = "WHO Threshold",
@@ -622,12 +610,7 @@ shinyApp(
                                           arrowhead = 3,
                                           arrowsize = 1,
                                           ax = -60,
-                                          ay = -20)) %>% 
-        add_trace(y = ~df()$who, type = "scatter", mode = "lines",
-                  line = list(color = "red"),
-                  name = "WHO Threshold",
-                  legendgroup = "who",
-                  showlegend = FALSE)
+                                          ay = -20))
       
     })
     

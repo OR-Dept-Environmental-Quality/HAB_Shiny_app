@@ -7,7 +7,9 @@ output:
 
 ## Overview       
 
-The application provides mapping data with time series data visualization for Oregon HABs in freshwater lakes and reservoirs. This guide describes the application features and steps for using the application.
+The application provides mapping data with time series data visualization for Oregon HABs. The map application uses satellite data from the [U.S. EPA CyAN Project][CyAN]. This guide describes the application features and steps for using the application.
+
+[CyAN]: https://www.epa.gov/water-research/cyanobacteria-assessment-network-cyan
 
 ## Application features and usage   
 
@@ -28,9 +30,7 @@ knitr::include_graphics("C:/Users/ygrund/ygrund_C_Users/PROJECTS/HABs/userGuide/
 
 4.	**Boxplot** shows the cyanobacteria abundance of the selected waterbody on the selected date. A red line indicates the World Health Organization (WHO) guideline (100,000 cells/mL) for cyanobacteria in recreational freshwater. When the default waterbody in the field of “Select a Waterbody” is "Oregon" or when a selected waterbody has no data on a selected day, no boxplot shows. Otherwise, hover the mouse icon over the boxplot to display the values of minimum, median, maximum, 1st quartile (25th percentile) and 3rd quartile (75th percentile) of cyanobacterial abundance (cells/mL) of the selected waterbody on the selected date.       
 
-5.	**Map** provides a visualization of the CyAN satellite data on the selected date. Default map shows Oregon view in the center of the map. The map refreshes in correspondence with the selected date or the selected waterbody. The lakes outlined in blue are the resolvable lakes. The lake name will show in blue text in the pop-up label when mouse moves over the lake. Four control buttons at the upper-left corner of the map allow users to (1) zoom in, (2) zoom out, (3) reset to Oregon map view with regardless of any selection of date or waterbody, (4) open up the layer options. In the layer options, user can choose the base maps between OpenStreetMap and ESRI National Geographic World Map, check "Hydrologic Unit 8 (HU8)" to display the USGS HC8 watershed boundaries on the map, and/or check "Land Cover (NLCD2016)" to overlay the land cover layer on the map. See [National Land Cover Database 2016 (NLCD2016) Legend][Legend]. If "Hydrologic Unit 8 (HU8)" is checked, the HUC8 watershed name will show in purple text in the popup label when mouse moves over the map. Check "Value" in (4) the map layer popup window to display cyanobacteria abundance value, the raster cell value, when mouse moves over the map (see the red arrows). The detection threshold is 6310 cells/mL. The value equal or less than this threshold is reported as "Non-detect". An insert map, a legend and a scale bar are also displayed. Double-click on the map to zoom in to the clicked area.   
-
-[Legend]: https://www.mrlc.gov/data/legends/national-land-cover-database-2016-nlcd2016-legend
+5.	**Map** provides a visualization of the CyAN satellite data on the selected date. Default map shows Oregon view in the center of the map. The map refreshes in correspondence with the selected date or the selected waterbody. The lakes outlined in blue are the resolvable lakes. The lake name will show in blue text in the popup label when mouse moves over the lake. Four control buttons at the upper-left corner of the map allow users to (1) zoom in, (2) zoom out, (3) reset to Oregon map view with regardless of any selection of date or waterbody, and (4) choose the base maps between OpenStreetMap and ESRI National Geographic World Map. The detection threshold is 6310 cells/mL. The value equal or less than this threshold is reported as "Non-detect". An insert map, a legend and a scale bar are also displayed. Double-click on the map to zoom in to the clicked area.       
 
 6.	**Date Range** allows users to choose a range of dates to display time series plot of cyanobacteria abundance of selected waterbody. Default starting date is the first date of the entire dataset and the default ending date is the last date with available data of the entire dataset.       
 

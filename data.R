@@ -13,7 +13,7 @@ dta1 <- readxl::read_xlsx("./data/HAB_resolvablelakes_2016_2020.xlsx",
                           sheet = "HAB_resolvablelakes_2016_2020")
 
 dta2 <- readxl::read_xlsx("./data/HAB_resolvablelakes_2021.xlsx",
-                          sheet = "HAB_resolvable_toMar182021")
+                          sheet = "HAB_resolvable_toApr52021")
 
 dta3 <- readxl::read_xlsx("./data/Resolvable_Lakes.xlsx",
                           sheet = "cyan_resolvable_lakes")

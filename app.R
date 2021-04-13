@@ -140,8 +140,17 @@ shinyApp(
         solidHeader = TRUE,
         
         tags$img(src = "DEQ-logo-color-horizontal370x73.png"),
-        tags$div(span("Freshwater Harmful Algal Blooms in Oregon",
+        tags$div(span("Satellite Imagery of Cyanobacteria in Oregon Lakes and Reservoirs",
                       style = "color: black; font-size: 40px"))
+        ,
+        tags$div(span(HTML(paste0("Last sourced from the ",
+                                  a("U.S. EPA CyAN Project", 
+                                    href="https://www.epa.gov/water-research/cyanobacteria-assessment-network-cyan"),
+                                  " on: ",
+                                  max(dta$Date))),
+                      style = "color: black; font-size: 20px"))
+        
+        #tags$br(),
         #,
         #tags$div(span(HTML(paste0("A Map Application for cyanobacteria blooms from the ",
         #                          a("U.S. EPA CyAN Project", 
@@ -194,7 +203,8 @@ shinyApp(
           # __ Boxplot ----
           HTML(paste(
             #tags$br(),
-            tags$h5("Cyanobacteria abundance of selected waterbody on selected date\n(cell/mL):")
+            tags$h5("Boxplot of cyanobacteria estimates (cells/mL)\n
+                    in waterbody on selected date:")
           )),
           
           plotlyOutput("boxplot")

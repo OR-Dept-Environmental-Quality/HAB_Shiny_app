@@ -1,5 +1,5 @@
 ---
-title: "ODEQ HABs Map Application - User Guide"
+title: "Satellite Imagery of Cyanobacteria in Oregon Lakes and Reservoirs - User Guide"
 output:
   html_document: default
   word_document: default
@@ -7,7 +7,7 @@ output:
 
 ## Overview       
 
-The application provides mapping data with time series data visualization for Oregon HABs. The map application uses satellite data from the [U.S. EPA CyAN Project][CyAN]. This guide describes the application features and steps for using the application.
+The application provides Cyanobacteria mapping data with time series data visualization for Oregon Lakes and Reservoirs. The map application uses satellite data from the [U.S. EPA CyAN Project][CyAN]. This guide describes the application features and steps for using the application.
 
 [CyAN]: https://www.epa.gov/water-research/cyanobacteria-assessment-network-cyan
 
@@ -42,8 +42,8 @@ knitr::include_graphics("C:/Users/ygrund/ygrund_C_Users/PROJECTS/HABs/userGuide/
 
 10.	**Table** shows the data corresponding to the time series plot based on selections of date range and summary statistics. The detection threshold is 6310 cells/mL. The value equal or less than this threshold is reported as "Non-detect". Click the up-down-arrows next to the table column name to sort the information as desired. Click the **Download** button to download the table in CSV, Excel and PDF format.        
 
-## Limitations
+## Limitation
 
-This application uses satellite imagery data from the European Space Agency Copernicus Sentinel-3 satellite Ocean and Land Color Instrument (OLCI). A satellite image is a geo-referenced TIFF formatted raster file. Each pixel cell represents a 300m x 300m area. Therefore, only lakes large enough can be accurately "resolved" by the satellite. 
+This application uses satellite imagery data from the European Space Agency Copernicus Sentinel-3 satellite Ocean and Landcolor Instrument (OLCI). A satellite image is a geo-referenced TIFF formatted raster file. Each pixel cell represents a 300m x 300m area. Therefore, only lakes large enough can be accurately "resolved" by the satellite. 
 
 In addition, satellite imagery data can be influenced by bottom reflectance of shallow waterbody and cloudiness. Data in this application should be interpolated with consideration of lake morphology and weather condition.

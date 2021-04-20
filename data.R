@@ -7,6 +7,7 @@ library(raster)
 library(leaflet)
 library(RColorBrewer)
 library(rasterVis)
+library(zoo)
 
 # (1) Plot and Table ----
 dta1 <- readxl::read_xlsx("./data/HAB_resolvablelakes_2016_2020.xlsx",
@@ -31,6 +32,23 @@ dta <- rbind(dta1,dta2) %>%
   dplyr::arrange(desc(Date)) %>% 
   dplyr::mutate(wi_DWSA = ifelse(GNISIDNAME %in% GNISNameID, "Yes", "No")) %>% 
   dplyr::filter(!GNISIDNAME == "Goose Lake_01520146") # located in the WA state
+
+dta_rolling_ave <- dta2 %>% 
+  dplyr::arrange(GNISIDNAME,desc(Date)) %>% 
+  dplyr::group_by(GNISIDNAME) %>% 
+  dplyr::mutate(rollmean_7 = zoo::rollmean(MEAN_cellsml, k = 7, fill = NA, align = "left"),
+                rollmax_7 = zoo::rollmax(MAX_cellsml, k=7, fill =  NA, align = "left")) %>% 
+  dplyr::ungroup() %>% 
+  dplyr::filter(as.Date(Date) == as.Date(max(dta2$Date)))
+
+mean_top_10 <- dta_rolling_ave %>% 
+  dplyr::arrange(desc(rollmean_7))
+max_top_10 <- dta_rolling_ave %>% 
+  dplyr::arrange(desc(rollmax_7)) %>%
+  dplyr::mutate(rollmax_7 = format(round(rollmax_7,0), big.mark=",", scientific=FALSE)) %>% 
+  dplyr::select(`Waterbody_GNISID` = GNISIDNAME,
+                `7-Day Max Moving Average` = rollmax_7)
+
 
 # (2) Date Lookup Table ----
 fulldays <- readxl::read_xlsx("./data/calendar-dates.xlsx",
@@ -69,5 +87,5 @@ pal.map <- leaflet::colorBin(palette = palette,
 # Legend labels
 labels = c("Non-detect","6,311 - 13,000","13,000 - 25,000","25,000 - 50,000","50,000 - 100,000","100,000 - 200,000","200,000 - 400,000","400,000 - 800,000","800,000 - 1,000,000","1,000,000 - 3,000,000","3,000,000 - 6,000,000","> 6,000,000")
 # ----
-rm(dta1); rm(dta2); rm(dta3)
+#rm(dta1); rm(dta2); rm(dta3)
 save.image(file = "data.RData")

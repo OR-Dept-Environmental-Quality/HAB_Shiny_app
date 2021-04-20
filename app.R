@@ -187,7 +187,7 @@ shinyApp(
                            weekstart = 0,
                            datesdisabled = missing.dates$Date),
           
-          # __ Select a Waterbody ----
+                    # __ Select a Waterbody ----
           shinyWidgets::pickerInput(inputId = "waterbody",
                                     label = tags$h4("Select a Waterbody:"),
                                     choices = list(
@@ -318,7 +318,7 @@ shinyApp(
                              options = scaleBarOptions()) %>% 
         leaflet::setView(lng = -120, lat = 44, zoom=7) %>%
         leaflet::addMiniMap(position = "bottomright",
-                            width = 200,
+                            width = 180,
                             height = 200,
                             zoomLevelFixed = 5) %>% 
         leaflet::addPolygons(data = lakes.resolvable, 
@@ -679,7 +679,7 @@ shinyApp(
       
       dta %>% 
         dplyr::filter(GNISIDNAME %in% input$waterbody) %>% 
-        dplyr::mutate(dwsa = ifelse(wi_DWSA == "Yes", "within a public drinking water source area.", "not within a public drinking water source area.")) %>% 
+        dplyr::mutate(dwsa = ifelse(wi_DWSA == "Yes", "Public Drinking Water Source", "Recreational Lake")) %>% 
         pull(dwsa)
       
     })
@@ -688,7 +688,7 @@ shinyApp(
       
       if(input$waterbody == c("Oregon")) {}
       else {
-        paste0("The selected waterbody is ",unique(dw())) 
+        unique(dw())
       }
     })
     

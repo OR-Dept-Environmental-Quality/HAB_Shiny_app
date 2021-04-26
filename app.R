@@ -187,7 +187,7 @@ shinyApp(
                            weekstart = 0,
                            datesdisabled = missing.dates$Date),
           
-          # __ Select a Waterbody ----
+                    # __ Select a Waterbody ----
           shinyWidgets::pickerInput(inputId = "waterbody",
                                     label = tags$h4("Select a Waterbody:"),
                                     choices = list(
@@ -318,7 +318,7 @@ shinyApp(
                              options = scaleBarOptions()) %>% 
         leaflet::setView(lng = -120, lat = 44, zoom=7) %>%
         leaflet::addMiniMap(position = "bottomright",
-                            width = 200,
+                            width = 180,
                             height = 200,
                             zoomLevelFixed = 5) %>% 
         leaflet::addPolygons(data = lakes.resolvable, 

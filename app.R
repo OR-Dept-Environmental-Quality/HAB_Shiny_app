@@ -679,7 +679,7 @@ shinyApp(
       
       dta %>% 
         dplyr::filter(GNISIDNAME %in% input$waterbody) %>% 
-        dplyr::mutate(dwsa = ifelse(wi_DWSA == "Yes", "within a public drinking water source area.", "not within a public drinking water source area.")) %>% 
+        dplyr::mutate(dwsa = ifelse(wi_DWSA == "Yes", "Public Drinking Water Source", "Recreational Waterbody")) %>% 
         pull(dwsa)
       
     })
@@ -688,7 +688,7 @@ shinyApp(
       
       if(input$waterbody == c("Oregon")) {}
       else {
-        paste0("The selected waterbody is ",unique(dw())) 
+        unique(dw())
       }
     })
     

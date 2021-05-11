@@ -1,0 +1,13 @@
+name: hab_shiny_app
+title: HAB_Shiny_app
+username: l_ygrund
+account: l_ygrund
+server: rstudioconnect.deq.state.or.us
+hostUrl: https://rstudioconnect.deq.state.or.us/__api__
+appId: 15
+bundleId: 43
+url: https://rstudioconnect.deq.state.or.us/content/15/
+when: 1618960002.71803
+asMultiple: FALSE
+asStatic: FALSE
+ignoredFiles: .gitattributes|debug.log|io_connection.R|ReadMe.md|www/Thumbs.db

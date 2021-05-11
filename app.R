@@ -679,7 +679,7 @@ shinyApp(
       
       dta %>% 
         dplyr::filter(GNISIDNAME %in% input$waterbody) %>% 
-        dplyr::mutate(dwsa = ifelse(wi_DWSA == "Yes", "Public Drinking Water Source", "Recreational Lake")) %>% 
+        dplyr::mutate(dwsa = ifelse(wi_DWSA == "Yes", "Public Drinking Water Source", "Recreational Waterbody")) %>% 
         pull(dwsa)
       
     })

@@ -9,12 +9,23 @@ library(RColorBrewer)
 library(rasterVis)
 library(zoo)
 
-# (1) Plot and Table ----
+# (1) Map: shapefile ----
+lakes.resolvable <- rgdal::readOGR(dsn = "./data/NHDwaterbody_resolvable_lakes_dissolved_oregon_clean_huc6.shp",
+                                   layer = "NHDwaterbody_resolvable_lakes_dissolved_oregon_clean_huc6")
+
+state.boundary <- sf::st_read("./data/state_boundary_blm.shp") %>% 
+  st_transform(crs="+init=epsg:4326")
+
+# (2) Plot and Table ----
 dta1 <- readxl::read_xlsx("./data/HAB_resolvablelakes_2016_2020.xlsx",
-                          sheet = "HAB_resolvablelakes_2016_2020")
+                          sheet = "HAB_resolvablelakes_2016_2020")%>% 
+  dplyr::filter(!GNISIDNAME == "Goose Lake_01520146") %>% # located in the WA state
+  dplyr::filter(GNISIDNAME %in% unique(sort(lakes.resolvable@data$GNISIDNAME)))
 
 dta2 <- readxl::read_xlsx("./data/HAB_resolvablelakes_2021.xlsx",
-                          sheet = "HAB_resolvable_lake_data")
+                          sheet = "HAB_resolvable_lake_data")%>% 
+  dplyr::filter(!GNISIDNAME == "Goose Lake_01520146") %>% # located in the WA state
+  dplyr::filter(GNISIDNAME %in% unique(sort(lakes.resolvable@data$GNISIDNAME)))
 
 dta3 <- readxl::read_xlsx("./data/Resolvable_Lakes.xlsx",
                           sheet = "cyan_resolvable_lakes")
@@ -30,27 +41,26 @@ dta <- rbind(dta1,dta2) %>%
   dplyr::mutate(GNISIDNAME = paste0(GNISNAME,"_",GNISID)) %>% 
   dplyr::mutate(Date = lubridate::ymd(Date)) %>% 
   dplyr::arrange(desc(Date)) %>% 
-  dplyr::mutate(wi_DWSA = ifelse(GNISIDNAME %in% GNISNameID, "Yes", "No")) %>% 
-  dplyr::filter(!GNISIDNAME == "Goose Lake_01520146") # located in the WA state
+  dplyr::mutate(wi_DWSA = ifelse(GNISIDNAME %in% GNISNameID, "Yes", "No"))
 
-dta_rolling_ave <- dta2 %>% 
-  dplyr::arrange(GNISIDNAME,desc(Date)) %>% 
-  dplyr::group_by(GNISIDNAME) %>% 
-  dplyr::mutate(rollmean_7 = zoo::rollmean(MEAN_cellsml, k = 7, fill = NA, align = "left"),
-                rollmax_7 = zoo::rollmax(MAX_cellsml, k=7, fill =  NA, align = "left")) %>% 
-  dplyr::ungroup() %>% 
-  dplyr::filter(as.Date(Date) == as.Date(max(dta2$Date)))
+#dta_rolling_ave <- dta2 %>% 
+#  dplyr::arrange(GNISIDNAME,desc(Date)) %>% 
+#  dplyr::group_by(GNISIDNAME) %>% 
+#  dplyr::mutate(rollmean_7 = zoo::rollmean(MEAN_cellsml, k = 7, fill = NA, align = "left"),
+#                rollmax_7 = zoo::rollmax(MAX_cellsml, k=7, fill =  NA, align = "left")) %>% 
+#  dplyr::ungroup() %>% 
+#  dplyr::filter(as.Date(Date) == as.Date(max(dta2$Date)))
 
-mean_top_10 <- dta_rolling_ave %>% 
-  dplyr::arrange(desc(rollmean_7))
-max_top_10 <- dta_rolling_ave %>% 
-  dplyr::arrange(desc(rollmax_7)) %>%
-  dplyr::mutate(rollmax_7 = format(round(rollmax_7,0), big.mark=",", scientific=FALSE)) %>% 
-  dplyr::select(`Waterbody_GNISID` = GNISIDNAME,
-                `7-Day Max Moving Average` = rollmax_7)
+#mean_top_10 <- dta_rolling_ave %>% 
+#  dplyr::arrange(desc(rollmean_7))
+#max_top_10 <- dta_rolling_ave %>% 
+#  dplyr::arrange(desc(rollmax_7)) %>%
+#  dplyr::mutate(rollmax_7 = format(round(rollmax_7,0), big.mark=",", scientific=FALSE)) %>% 
+#  dplyr::select(`Waterbody_GNISID` = GNISIDNAME,
+#                `7-Day Max Moving Average` = rollmax_7)
 
 
-# (2) Date Lookup Table ----
+# (3) Date Lookup Table ----
 fulldays <- readxl::read_xlsx("./data/calendar-dates.xlsx",
                               sheet = "calendar-dates") %>% 
   dplyr::mutate(Date = lubridate::ymd(Date))
@@ -66,13 +76,6 @@ lookup.date <- dta %>%
 
 missing.dates <- lookup.date %>% 
   dplyr::filter(is.na(Day.dta))
-
-# (3) Map: shapefile ----
-lakes.resolvable <- rgdal::readOGR(dsn = "./data/NHDwaterbody_resolvable_lakes_dissolved_oregon_clean.shp",
-                                   layer = "NHDwaterbody_resolvable_lakes_dissolved_oregon_clean")
-
-state.boundary <- sf::st_read("./data/state_boundary_blm.shp") %>% 
-  st_transform(crs="+init=epsg:4326")
 
 # (4) Map: raster ----
 # Raster color 

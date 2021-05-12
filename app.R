@@ -1,5 +1,6 @@
 library(tidyverse)
 library(shiny)
+library(shinyBS)
 library(shinyWidgets)
 library(shinythemes)
 library(shinydashboard)
@@ -187,7 +188,12 @@ shinyApp(
                            weekstart = 0,
                            datesdisabled = missing.dates$Date),
           
-                    # __ Select a Waterbody ----
+          # __ Max 7D Means ----
+          uiOutput("top10"),
+          
+          tags$hr(),
+          
+          # __ Select a Waterbody ----
           shinyWidgets::pickerInput(inputId = "waterbody",
                                     label = tags$h4("Select a Waterbody:"),
                                     choices = list(
@@ -658,7 +664,53 @@ shinyApp(
       #DT::formatDate("Date","toLocaleString")
     }, server = FALSE)
     
+    # _ Max 7D Means ----
+    title <- reactive({
+      
+      paste0("Waterbodies ranked by the maximum daily mean of Cyanobacteria abundance (cells/mL) during the 7 days from ", 
+             as.Date(input$date_map)-7, " to ",input$date_map, 
+             ". The dates associated with the maximum daily means are shown in the table.")
+      
+    })
+    
+    tbl.data.7days <- reactive({
+      
+      dta2 %>% 
+        dplyr::arrange(GNISIDNAME, desc(Date)) %>% 
+        dplyr::filter((as.Date(Date) <= as.Date(input$date_map)) & (as.Date(Date) >= as.Date(input$date_map)-7))
+      
+    })
+    
+    tbl.data <- reactive({
+      
+      tbl.data.7days() %>% 
+        dplyr::group_by(GNISIDNAME) %>% 
+        dplyr::summarise(max_7DayMean = max(MEAN_cellsml)) %>% 
+        dplyr::ungroup() %>% 
+        dplyr::left_join(tbl.data.7days(),by="GNISIDNAME") %>% 
+        dplyr::filter(max_7DayMean == MEAN_cellsml) %>% 
+        dplyr::arrange(desc(max_7DayMean)) %>% 
+        dplyr::left_join(lakes.resolvable@data, by = "GNISIDNAME") %>% 
+        dplyr::mutate(Basin = ifelse(Name_1 == "Willamette",Name,Name_1)) %>% 
+        dplyr::select(GNISIDNAME,Basin,Date,max_7DayMean) %>% 
+        dplyr::distinct(GNISIDNAME, .keep_all = TRUE) %>% 
+        #dplyr::mutate(max_7DayMean = format(round(max_7DayMean,0),big.mark=",",scientific = FALSE)) %>% 
+        dplyr::mutate(max_7DayMean = ifelse(max_7DayMean <= 6310, "Non-detect",
+                                            format(round(max_7DayMean,0),big.mark=",",scientific = FALSE))) %>%
+        dplyr::mutate(Date = as.Date(Date,format="%Y-%b-%d")) %>% 
+        dplyr::rename(Waterbody_GNISID = GNISIDNAME,
+                      `Maximum 7 Daily Mean` = max_7DayMean)
+    })
+    
+    output$top10 <- renderUI({
+      tagList(
+        bsModal("modal", title(), trigger = "a", DT::renderDataTable(tbl.data()), size = "large"),
+        actionButton("a", "Table of Waterbodies Ranked by Max 7D Mean")
+      )
+    })
+    
     # _ Bloom table ----
+    # (didn't use)
     df.blooms <- reactive({
       
       dta %>% 

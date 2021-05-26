@@ -191,7 +191,18 @@ shinyApp(
           # __ Max 7D Means ----
           uiOutput("top10"),
           
-          tags$hr(),
+          #tags$hr(),
+          
+          # __ Select a Basin ----
+          shinyWidgets::pickerInput(inputId = "basin",
+                                    label = tags$h4("Select a Basin:"),
+                                    choices = list(
+                                      "Oregon",
+                                      "HUC6 Basin" = unique(sort(huc6@data$HU_6_NAME))
+                                    ),
+                                    multiple = FALSE),
+          
+          #tags$hr(),
           
           # __ Select a Waterbody ----
           shinyWidgets::pickerInput(inputId = "waterbody",
@@ -223,7 +234,7 @@ shinyApp(
           #title = "map",
           solidHeader = TRUE,
           
-          leaflet::leafletOutput("map", height = "700px")
+          leaflet::leafletOutput("map", height = "750px")
           
         ) # Map box END
         
@@ -305,7 +316,7 @@ shinyApp(
         leaflet::addMapPane("National Geographic World Map", zIndex = -40) %>%
         #leaflet::addMapPane("Tiles", zIndex = -40) %>%
         leaflet::addMapPane("state.boundary", zIndex = -30) %>%
-        #leaflet::addMapPane("HUC8",zIndex = -20) %>% 
+        leaflet::addMapPane("HUC6",zIndex = -20) %>% 
         leaflet::addMapPane("lakes.resolvable", zIndex = -10) %>%
         #leaflet::addMapPane("raster", zIndex = 450) %>%
         leaflet::addProviderTiles("OpenStreetMap",group = "OpenStreetMap",
@@ -339,26 +350,28 @@ shinyApp(
                              labelOptions = labelOptions(style = list("font-size" = "18px",
                                                                       "color" = "blue")),
                              options = pathOptions(pane = "lakes.resolvable"))%>% 
-        #leaflet::addPolygons(data = huc8, 
-        #                     group = "Hydrologic Unit 8 (HU8)",
-        #                     color = "purple",
-        #                     weight = 2,
-        #                     smoothFactor = 0.5,
-        #                     opacity = 0.5,
-        #                     fillColor = "transparent",
-        #                     fillOpacity = 1.0,
-        #                     label = ~huc8$HU_8_NAME,
-        #                     labelOptions = labelOptions(style = list("font-size" = "18px",
-        #                                                              "color" = "purple",
-      #                                                              "box-shadow" = "3px 3px rgba(0,0,0,0.25)",
-      #                                                              "border-color" = "rgba(0,0,0,0.5)")),
-      #                     options = pathOptions(pane = "HUC8"))%>% 
-      leaflet::addPolygons(data = state.boundary, 
-                           color = "black",
-                           weight = 2,
-                           fillColor = "transparent",
-                           fillOpacity = 1.0,
-                           options = pathOptions(pane = "state.boundary")) %>% 
+        leaflet::addPolygons(data = huc6, 
+                             group = "basin",
+                             color = "grey",
+                             weight = 2,
+                             smoothFactor = 0.5,
+                             opacity = 0.5,
+                             fillColor = ~pal.huc6(HU_6_NAME),
+                             fillOpacity = 0.2,
+                             label = ~huc6$HU_6_NAME,
+                             labelOptions = labelOptions(noHide = F,
+                                                         textOnly = TRUE,
+                                                         style = list("font-size" = "18px",
+                                                                      "color" = "black")),
+                                                         #             "box-shadow" = "3px 3px rgba(0,0,0,0.25)",
+                                                         #             "border-color" = "rgba(0,0,0,0.5)")),
+                             options = pathOptions(pane = "HUC6"))%>% 
+        leaflet::addPolygons(data = state.boundary, 
+                             color = "black",
+                             weight = 2,
+                             fillColor = "transparent",
+                             fillOpacity = 1.0,
+                             options = pathOptions(pane = "state.boundary")) %>% 
         leaflet::addLayersControl(baseGroups = c("OpenStreetMap","National Geographic World Map"),
                                   #overlayGroups = c("Hydrologic Unit 8 (HU8)","Land Cover (NLCD 2016)"),
                                   position = "topleft",
@@ -396,6 +409,35 @@ shinyApp(
       
     })
     
+    # _ map reactive @ basin picker ----
+    
+    observeEvent(input$basin,{
+      
+      if(input$basin == c("Oregon")) {
+        
+        leafletProxy("map") %>% 
+          leaflet::setView(lng = -120, lat = 44, zoom=7)
+        
+      } else {
+        
+        one.basin <- reactive({
+          
+          huc6[which(huc6@data$HU_6_NAME == input$basin),]
+          
+        })
+        
+        bounds.basin <- reactive({
+          
+          data.frame(bbox(one.basin()))
+          
+        })
+        
+        leafletProxy("map") %>% 
+          leaflet::fitBounds(lng1=bounds.basin()$min[1], lat1=bounds.basin()$min[2], lng2=bounds.basin()$max[1], lat2=bounds.basin()$max[2])
+        
+      }
+      
+    })
     
     # _ map reactive @ date selector ----
     

@@ -16,6 +16,10 @@ lakes.resolvable <- rgdal::readOGR(dsn = "./data/NHDwaterbody_resolvable_lakes_d
 state.boundary <- sf::st_read("./data/state_boundary_blm.shp") %>% 
   st_transform(crs="+init=epsg:4326")
 
+huc6 <- rgdal::readOGR(dsn = "./data/WBD_HU6.shp",layer = "WBD_HU6")
+
+pal.huc6 <- leaflet::colorFactor(palette = "Paired", domain = unique(sort(huc6@data$HU_6_NAME)))
+
 # (2) Plot and Table ----
 dta1 <- readxl::read_xlsx("./data/HAB_resolvablelakes_2016_2020.xlsx",
                           sheet = "HAB_resolvablelakes_2016_2020")%>% 

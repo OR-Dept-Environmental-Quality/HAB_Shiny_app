@@ -188,8 +188,8 @@ shinyApp(
                            weekstart = 0,
                            datesdisabled = missing.dates$Date),
           
-          # __ Max 7D Means ----
-          uiOutput("top10"),
+          # __ 7DADM ----
+          uiOutput("tbl7dadm"),
           
           #tags$hr(),
           
@@ -351,7 +351,7 @@ shinyApp(
                                                                       "color" = "blue")),
                              options = pathOptions(pane = "lakes.resolvable"))%>% 
         leaflet::addPolygons(data = huc6, 
-                             group = "basin",
+                             group = "Basins (HUC6)",
                              color = "grey",
                              weight = 2,
                              smoothFactor = 0.5,
@@ -359,9 +359,9 @@ shinyApp(
                              fillColor = ~pal.huc6(HU_6_NAME),
                              fillOpacity = 0.2,
                              label = ~huc6$HU_6_NAME,
-                             labelOptions = labelOptions(noHide = F,
+                             labelOptions = labelOptions(noHide = TRUE,
                                                          textOnly = TRUE,
-                                                         style = list("font-size" = "18px",
+                                                         style = list("font-size" = "12px",
                                                                       "color" = "black")),
                                                          #             "box-shadow" = "3px 3px rgba(0,0,0,0.25)",
                                                          #             "border-color" = "rgba(0,0,0,0.5)")),
@@ -374,9 +374,11 @@ shinyApp(
                              options = pathOptions(pane = "state.boundary")) %>% 
         leaflet::addLayersControl(baseGroups = c("OpenStreetMap","National Geographic World Map"),
                                   #overlayGroups = c("Hydrologic Unit 8 (HU8)","Land Cover (NLCD 2016)"),
+                                  overlayGroups = c("Basins (HUC6)"),
                                   position = "topleft",
-                                  options = layersControlOptions(collapsed = TRUE, autoZIndex = FALSE)) #%>% 
+                                  options = layersControlOptions(collapsed = TRUE, autoZIndex = FALSE)) %>% 
       #leaflet::hideGroup(c("HUC8","Land Cover (NLCD 2016)"))
+        leaflet::hideGroup(c("Basins (HUC6)"))
       
     })
     
@@ -480,9 +482,11 @@ shinyApp(
           leaflet::addLayersControl(#overlayGroups = c("Hydrologic Unit 8 (HU8)","Land Cover (NLCD 2016)","Value"),
             #overlayGroups = c("Value"),
             baseGroups = c("OpenStreetMap","National Geographic World Map"),
+            overlayGroups = c("Basins (HUC6)"),
             position = "topleft",
-            options = layersControlOptions(collapsed = TRUE, autoZIndex = FALSE)) #%>% 
+            options = layersControlOptions(collapsed = TRUE, autoZIndex = FALSE)) %>% 
         #leaflet::hideGroup(c("Hydrologic Unit 8 (HU8)","Land Cover (NLCD 2016)"))
+          leaflet::hideGroup(c("Basins (HUC6)"))
         
       } 
       
@@ -706,12 +710,12 @@ shinyApp(
       #DT::formatDate("Date","toLocaleString")
     }, server = FALSE)
     
-    # _ Max 7D Means ----
+    # _ 7DADM ----
     title <- reactive({
       
-      paste0("Waterbodies ranked by the maximum daily mean of Cyanobacteria abundance (cells/mL) during the 7 days from ", 
+      paste0("Waterbodies ranked by the 7-Day Average Daily Maximum (7DADM) of cyanobacteria abundance (cells/mL) during the 7 days from ", 
              as.Date(input$date_map)-7, " to ",input$date_map, 
-             ". The dates associated with the maximum daily means are shown in the table.")
+             ".")
       
     })
     
@@ -727,27 +731,26 @@ shinyApp(
       
       tbl.data.7days() %>% 
         dplyr::group_by(GNISIDNAME) %>% 
-        dplyr::summarise(max_7DayMean = max(MEAN_cellsml)) %>% 
+        dplyr::summarise(mean_7DayMax = mean(MAX_cellsml)) %>% 
         dplyr::ungroup() %>% 
-        dplyr::left_join(tbl.data.7days(),by="GNISIDNAME") %>% 
-        dplyr::filter(max_7DayMean == MEAN_cellsml) %>% 
-        dplyr::arrange(desc(max_7DayMean)) %>% 
+        #dplyr::left_join(tbl.data.7days(),by="GNISIDNAME") %>% 
+        #dplyr::filter(mean_7DayMax == MAX_cellsml) %>% 
+        dplyr::arrange(desc(mean_7DayMax)) %>% 
         dplyr::left_join(lakes.resolvable@data, by = "GNISIDNAME") %>% 
         dplyr::mutate(Basin = ifelse(Name_1 == "Willamette",Name,Name_1)) %>% 
-        dplyr::select(GNISIDNAME,Basin,Date,max_7DayMean) %>% 
+        dplyr::select(GNISIDNAME,Basin,mean_7DayMax) %>% 
         dplyr::distinct(GNISIDNAME, .keep_all = TRUE) %>% 
-        #dplyr::mutate(max_7DayMean = format(round(max_7DayMean,0),big.mark=",",scientific = FALSE)) %>% 
-        dplyr::mutate(max_7DayMean = ifelse(max_7DayMean <= 6310, "Non-detect",
-                                            format(round(max_7DayMean,0),big.mark=",",scientific = FALSE))) %>%
-        dplyr::mutate(Date = as.Date(Date,format="%Y-%b-%d")) %>% 
+        dplyr::mutate(mean_7DayMax = ifelse(mean_7DayMax<= 6310, "Non-detect",
+                                            format(round(mean_7DayMax,0),big.mark=",",scientific = FALSE))) %>% 
+        #dplyr::mutate(Date = as.Date(Date,format="%Y-%b-%d")) %>% 
         dplyr::rename(Waterbody_GNISID = GNISIDNAME,
-                      `Maximum 7 Daily Mean` = max_7DayMean)
+                      `7-Day Average Daily Maximum (cells/mL)` = mean_7DayMax)
     })
     
-    output$top10 <- renderUI({
+    output$tbl7dadm <- renderUI({
       tagList(
         bsModal("modal", title(), trigger = "a", DT::renderDataTable(tbl.data()), size = "large"),
-        actionButton("a", "Table of Waterbodies Ranked by Max 7D Mean")
+        actionButton("a", "Table of Waterbodies Ranked by 7DADM")
       )
     })
     

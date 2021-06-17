@@ -1,0 +1,13 @@
+name: odeq_cyano_satellite_imagery
+title: ODEQ_Cyano_Satellite_Imagery
+username: l_ygrund
+account: l_ygrund
+server: rstudioconnect.deq.state.or.us
+hostUrl: https://rstudioconnect.deq.state.or.us/__api__
+appId: 19
+bundleId: 51
+url: https://rstudioconnect.deq.state.or.us/content/5f630023-1875-483f-8517-c6c02f86cacb/
+when: 1623454820.49707
+lastSyncTime: 1623454820.49707
+asMultiple: FALSE
+asStatic: FALSE

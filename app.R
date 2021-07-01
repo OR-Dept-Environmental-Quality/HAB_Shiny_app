@@ -63,17 +63,14 @@ shinyApp(
                          .skin-blue .main-header .logo {
                          background-color: #23769a;
                          }
-
                          /* logo when hovered */
                          .skin-blue .main-header .logo:hover {
                          background-color: #23769a;
                          }
-
                          /* navbar (rest of the header) */
                          .skin-blue .main-header .navbar {
                          background-color: #23769a;
                          }
-
                          /* main sidebar */
                          .skin-blue .main-sidebar {
                          background-color: #23769a;
@@ -87,13 +84,11 @@ shinyApp(
                          .skin-blue .main-sidebar .sidebar .sidebar-menu .active a{
                          background-color: #23769a;
                          }
-
                          /* other links in the sidebarmenu */
                          .skin-blue .main-sidebar .sidebar .sidebar-menu a{
                          background-color: #23769a;
                          color: white;
                          }
-
                          /* other links in the sidebarmenu when hovered */
                          .skin-blue .main-sidebar .sidebar .sidebar-menu a:hover{
                          background-color: #23769a;
@@ -103,7 +98,6 @@ shinyApp(
                          .skin-blue .main-header .navbar .sidebar-toggle:hover{
                          background-color: #23769a;
                          }
-
                          /* body */
                          .content-wrapper, .right-side {
                          background-color: white;
@@ -363,8 +357,8 @@ shinyApp(
                                                          textOnly = TRUE,
                                                          style = list("font-size" = "12px",
                                                                       "color" = "black")),
-                                                         #             "box-shadow" = "3px 3px rgba(0,0,0,0.25)",
-                                                         #             "border-color" = "rgba(0,0,0,0.5)")),
+                             #             "box-shadow" = "3px 3px rgba(0,0,0,0.25)",
+                             #             "border-color" = "rgba(0,0,0,0.5)")),
                              options = pathOptions(pane = "HUC6"))%>% 
         leaflet::addPolygons(data = state.boundary, 
                              color = "black",
@@ -377,7 +371,7 @@ shinyApp(
                                   overlayGroups = c("Basins (HUC6)"),
                                   position = "topleft",
                                   options = layersControlOptions(collapsed = TRUE, autoZIndex = FALSE)) %>% 
-      #leaflet::hideGroup(c("HUC8","Land Cover (NLCD 2016)"))
+        #leaflet::hideGroup(c("HUC8","Land Cover (NLCD 2016)"))
         leaflet::hideGroup(c("Basins (HUC6)"))
       
     })
@@ -485,7 +479,7 @@ shinyApp(
             overlayGroups = c("Basins (HUC6)"),
             position = "topleft",
             options = layersControlOptions(collapsed = TRUE, autoZIndex = FALSE)) %>% 
-        #leaflet::hideGroup(c("Hydrologic Unit 8 (HU8)","Land Cover (NLCD 2016)"))
+          #leaflet::hideGroup(c("Hydrologic Unit 8 (HU8)","Land Cover (NLCD 2016)"))
           leaflet::hideGroup(c("Basins (HUC6)"))
         
       } 

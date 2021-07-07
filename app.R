@@ -421,17 +421,19 @@ shinyApp(
           
         })
         
+        lid <- paste0("Cell value on ",input$date_map)
+        
         leafletProxy("map") %>% 
           leaflet::clearImages() %>% 
           leaflet::clearControls() %>% 
-          leaflet::addRasterImage(rst(), layerId = "Value", project = FALSE, colors=pal.map, opacity = 1) %>% 
+          leaflet::addRasterImage(rst(), layerId = lid, project = TRUE, colors=pal.map, opacity = 1) %>% 
           #leafem::addMouseCoordinates() %>% 
-          #leafem::addImageQuery(rst(), layerId = "Value", digits = 0, project = TRUE, type = "mousemove",
-          #                      position="topright",prefix = "") %>% 
+          leafem::addImageQuery(rst(), layerId = lid, project = TRUE, type = "mousemove",
+                                position="topright",prefix = "") %>% 
           leaflet::addLegend(pal = pal.map, values = thevalues, title = "Cyanobacteria (cells/mL)", position = "topright",
                              labFormat = function(type,cuts,p){paste0(labels)}) %>% 
           leaflet::addLayersControl(#overlayGroups = c("Hydrologic Unit 8 (HU8)","Land Cover (NLCD 2016)","Value"),
-            #overlayGroups = c("Value"),
+            overlayGroups = lid,
             baseGroups = c("OpenStreetMap","National Geographic World Map"),
             position = "topleft",
             options = layersControlOptions(collapsed = TRUE, autoZIndex = FALSE)) #%>% 
@@ -605,8 +607,6 @@ shinyApp(
         split = ~`Summary Statistics`,
         type = "scatter",
         mode = "lines",
-        #connectgaps = FALSE,
-        #type = "bar",
         color = ~`Summary Statistics`,
         colors = pal.plot,
         legendgroup = "sta") %>% 

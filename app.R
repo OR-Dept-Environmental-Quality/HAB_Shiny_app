@@ -322,7 +322,8 @@ shinyApp(
                                           weight = 3,
                                           color = "brown",
                                           opacity = 3,
-                                          fillColor = "transparent",
+                                          #fillColor = "transparent",
+                                          fillColor = "brown",
                                           fillOpacity = 0) %>%  
         leaflet::addWMSTiles(baseUrl = paste0('https://services.sentinel-hub.com/ogc/wms/561a13d0-40cb-42a1-aa98-3afe74f74fa6?',
                                               'REQUEST=GetMap&',

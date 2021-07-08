@@ -213,3 +213,5 @@
 .Rproj.user/1CA26A80/sources/s-A8ED8BF8/8F252B74-contents
 .Rproj.user/1CA26A80/sources/s-A8ED8BF8/C67D44CF-contents
 .Rproj.user
+*.pper
+.Rhistory

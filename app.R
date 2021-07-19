@@ -230,7 +230,13 @@ shinyApp(
           
           leaflet::leafletOutput("map", height = "750px")
           
-        ) # Map box END
+        ), # Map box END
+        
+        tags$div(span(HTML(paste("Access Sentinel 2 imagery through",
+                                  a("Sentinel Hub", 
+                                    href="https://apps.sentinel-hub.com/sentinel-playground/?source=S2L2A&lat=40.4&lng=-3.730000000000018&zoom=12&preset=1_TRUE_COLOR&layers=B01,B02,B03&maxcc=20&gain=1.0&gamma=1.0&time=2021-01-01%7C2021-07-12&atmFilter=&showDates=false"),
+                                  ".")),
+                      style = "color: black; font-size: 20px"))
         
       ), # Part 1 box END
       

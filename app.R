@@ -16,6 +16,7 @@ library(scales)
 library(plotly)
 library(DT)
 library(lubridate)
+library(sen2r)
 
 load("data.RData")
 
@@ -312,28 +313,28 @@ shinyApp(
                                   options = pathOptions(pane = "OpenStreetMap")) %>% 
         leaflet::addProviderTiles(providers$Esri.NatGeoWorldMap,group = "National Geographic World Map",
                                   options = pathOptions(pane = "National Geographic World Map")) %>% 
-        leaflet.esri::addEsriFeatureLayer(url="https://arcgis.deq.state.or.us/arcgis/rest/services/WQ/NHDH_ORDEQ/MapServer/2",
-                                          options = leaflet.esri::featureLayerOptions(where = "AreaSqKm+>+2"),
-                                          group = "NHDN Waterbodies",
-                                          #pathOptions = leaflet::pathOptions(pane="huc8"),
-                                          labelProperty = "GNIS_Name",
-                                          labelOptions = leaflet::labelOptions(style = list("color" = "brown",
-                                                                                            "font-size" = "20px")),
-                                          weight = 3,
-                                          color = "brown",
-                                          opacity = 3,
-                                          #fillColor = "transparent",
-                                          fillColor = "brown",
-                                          fillOpacity = 0) %>%  
-        leaflet::addWMSTiles(baseUrl = paste0('https://services.sentinel-hub.com/ogc/wms/561a13d0-40cb-42a1-aa98-3afe74f74fa6?',
-                                              'REQUEST=GetMap&',
-                                              'BBOX=3238005,5039853,3244050,5045897&',
-                                              'LAYERS=TRUE-COLOR&MAXCC=20&',
-                                              'WIDTH=320&HEIGHT=320&',
-                                              'FORMAT=image/jpeg&',
-                                              'TIME=2016-01-01/2020-05-20'),
-                             group = "NDVI",
-                             layers = "NDVI") %>% 
+        #leaflet.esri::addEsriFeatureLayer(url="https://arcgis.deq.state.or.us/arcgis/rest/services/WQ/NHDH_ORDEQ/MapServer/2",
+        #                                  options = leaflet.esri::featureLayerOptions(where = "AreaSqKm+>+2"),
+        #                                  group = "NHDN Waterbodies",
+        #                                  #pathOptions = leaflet::pathOptions(pane="huc8"),
+        #                                  labelProperty = "GNIS_Name",
+        #                                  labelOptions = leaflet::labelOptions(style = list("color" = "brown",
+        #                                                                                    "font-size" = "20px")),
+        #                                  weight = 3,
+        #                                  color = "brown",
+        #                                  opacity = 3,
+        #                                  #fillColor = "transparent",
+        #                                  fillColor = "brown",
+        #                                  fillOpacity = 0) %>%  
+        #leaflet::addWMSTiles(baseUrl = paste0('https://services.sentinel-hub.com/ogc/wms/561a13d0-40cb-42a1-aa98-3afe74f74fa6?',
+        #                                      'REQUEST=GetMap&',
+        #                                      'BBOX=3238005,5039853,3244050,5045897&',
+        #                                      'LAYERS=TRUE-COLOR&MAXCC=20&',
+        #                                      'WIDTH=320&HEIGHT=320&',
+        #                                      'FORMAT=image/jpeg&',
+        #                                      'TIME=2016-01-01/2020-05-20'),
+        #                     group = "NDVI",
+        #                     layers = "NDVI") %>% 
         #leaflet::addWMSTiles(baseUrl = 'https://www.mrlc.gov/geoserver/mrlc_display/NLCD_2016_Land_Cover_L48/wms?',
         #                     group = "Land Cover (NLCD 2016)",
         #                     layers = "NLCD_2016_Land_Cover_L48",
@@ -383,11 +384,11 @@ shinyApp(
                            options = pathOptions(pane = "state.boundary")) %>% 
         leaflet::addLayersControl(baseGroups = c("OpenStreetMap","National Geographic World Map"),
                                   #overlayGroups = c("Hydrologic Unit 8 (HU8)","Land Cover (NLCD 2016)"),
-                                  overlayGroups = c("NHDN Waterbodies","NDVI"),
+                                  #overlayGroups = c("NHDN Waterbodies","NDVI"),
                                   position = "topleft",
-                                  options = layersControlOptions(collapsed = TRUE, autoZIndex = FALSE)) %>% 
+                                  options = layersControlOptions(collapsed = TRUE, autoZIndex = FALSE))
       #leaflet::hideGroup(c("HUC8","Land Cover (NLCD 2016)"))
-      leaflet::hideGroup(c("NHDN Waterbodies","NDVI"))
+      #leaflet::hideGroup(c("NHDN Waterbodies","NDVI"))
       
     })
     
@@ -462,11 +463,11 @@ shinyApp(
           leaflet::addLayersControl(#overlayGroups = c("Hydrologic Unit 8 (HU8)","Land Cover (NLCD 2016)","Value"),
             #overlayGroups = c("Value"),
             baseGroups = c("OpenStreetMap","National Geographic World Map"),
-            overlayGroups = c("NHDN Waterbodies","NDVI"),
+            #overlayGroups = c("NHDN Waterbodies","NDVI"),
             position = "topleft",
-            options = layersControlOptions(collapsed = TRUE, autoZIndex = FALSE)) %>% 
+            options = layersControlOptions(collapsed = TRUE, autoZIndex = FALSE))
           #leaflet::hideGroup(c("Hydrologic Unit 8 (HU8)","Land Cover (NLCD 2016)"))
-          leaflet::hideGroup(c("NHDN Waterbodies","NDVI"))
+          #leaflet::hideGroup(c("NHDN Waterbodies","NDVI"))
         
       } 
       

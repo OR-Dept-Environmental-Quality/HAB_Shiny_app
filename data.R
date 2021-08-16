@@ -9,6 +9,10 @@ library(RColorBrewer)
 library(rasterVis)
 library(zoo)
 
+# Get update of NASA data----
+# Need to have ArcPro on your machine; modify path in the script to point to the correct version of python
+source("Update_NASA_imagery.R")
+
 # (1) Map: shapefile ----
 lakes.resolvable <- rgdal::readOGR(dsn = "./data/NHDwaterbody_resolvable_lakes_dissolved_oregon_clean_huc6.shp",
                                    layer = "NHDwaterbody_resolvable_lakes_dissolved_oregon_clean_huc6")

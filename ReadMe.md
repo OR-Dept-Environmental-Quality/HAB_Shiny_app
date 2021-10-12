@@ -4,7 +4,7 @@ This web application provides an interactive map to view satellite derived data 
 
 This app requires the ShinydashboardPlus package version 2.0.0.9000. The app.R has a check on this package and will install this package from the developer's gifhub site if the user does not have this package installed previously.
 
-# License
+## License
 
 GNU General Public License v3 (GPLv3)
 

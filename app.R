@@ -6,6 +6,7 @@ library(shinythemes)
 library(shinydashboard)
 library(shinydashboardPlus)
 library(shinyEffects)
+library(shinycssloaders)
 library(raster)
 library(leaflet)
 library(leaflet.extras)
@@ -37,7 +38,9 @@ shinyApp(
                  cyanobacteria harmful algal blooms in<br/>
                  freshwater ecosystems of Oregon. Satellite<br/>
                  data come from the US EPA CyAN project<br/>
-                 and are updated on a regular basis.")))),
+                 and are updated on a regular basis.<br/>
+                 <br/>
+                 Copyright (C) 2020-2021, ODEQ.")))),
         menuItem("User Guide",  icon = icon("cog"), href="userGuide.html"),
         menuItem("Contact", icon = icon("envelope"),
                  menuSubItem(h5(HTML("
@@ -188,13 +191,13 @@ shinyApp(
           #tags$hr(),
           
           # __ Select a Basin ----
-          shinyWidgets::pickerInput(inputId = "basin",
-                                    label = tags$h4("Select a Basin:"),
-                                    choices = list(
-                                      "Oregon",
-                                      "HUC6 Basin" = unique(sort(huc6@data$HU_6_NAME))
-                                    ),
-                                    multiple = FALSE),
+          #shinyWidgets::pickerInput(inputId = "basin",
+          #                          label = tags$h4("Select a Basin:"),
+          #                          choices = list(
+          #                            "Oregon",
+          #                            "HUC6 Basin" = unique(sort(huc6@data$HU_6_NAME))
+          #                          ),
+          #                          multiple = FALSE),
           
           #tags$hr(),
           
@@ -218,7 +221,7 @@ shinyApp(
                     in waterbody on selected date:")
           )),
           
-          plotlyOutput("boxplot")
+          shinycssloaders::withSpinner(plotlyOutput("boxplot"))
           
         ), # Date box END
         
@@ -228,7 +231,7 @@ shinyApp(
           #title = "map",
           solidHeader = TRUE,
           
-          leaflet::leafletOutput("map", height = "750px")
+          shinycssloaders::withSpinner(leaflet::leafletOutput("map", height = "650px"))
           
         ), # Map box END
         
@@ -317,8 +320,8 @@ shinyApp(
         #leaflet::addMapPane("Tiles", zIndex = -40) %>%
         leaflet::addMapPane("state.boundary", zIndex = -30) %>%
         leaflet::addMapPane("HUC6",zIndex = -20) %>% 
-        leaflet::addMapPane("lakes.resolvable", zIndex = -10) %>%
-        #leaflet::addMapPane("raster", zIndex = 450) %>%
+        leaflet::addMapPane("lakes.resolvable", zIndex = 500) %>%
+        #leaflet::addMapPane("Satellite Imagery of cyanobacteria", zIndex = 450) %>%
         leaflet::addProviderTiles("OpenStreetMap",group = "OpenStreetMap",
                                   options = pathOptions(pane = "OpenStreetMap")) %>% 
         leaflet::addProviderTiles(providers$Esri.NatGeoWorldMap,group = "National Geographic World Map",
@@ -374,7 +377,7 @@ shinyApp(
                              options = pathOptions(pane = "state.boundary")) %>% 
         leaflet::addLayersControl(baseGroups = c("OpenStreetMap","National Geographic World Map"),
                                   #overlayGroups = c("Hydrologic Unit 8 (HU8)","Land Cover (NLCD 2016)"),
-                                  overlayGroups = c("Basins (HUC6)"),
+                                  overlayGroups = c("Satellite Imagery of cyanobacteria","Basins (HUC6)"),
                                   position = "topleft",
                                   options = layersControlOptions(collapsed = TRUE, autoZIndex = FALSE)) %>% 
         #leaflet::hideGroup(c("HUC8","Land Cover (NLCD 2016)"))
@@ -473,7 +476,8 @@ shinyApp(
         leafletProxy("map") %>% 
           leaflet::clearImages() %>% 
           leaflet::clearControls() %>% 
-          leaflet::addRasterImage(rst(), layerId = "Value", project = FALSE, colors=pal.map, opacity = 1) %>% 
+          leaflet::addRasterImage(rst(), layerId = "Value", project = FALSE, colors=pal.map, opacity = 1,
+                                  group = "Satellite Imagery of cyanobacteria") %>% 
           #leafem::addMouseCoordinates() %>% 
           #leafem::addImageQuery(rst(), layerId = "Value", digits = 0, project = TRUE, type = "mousemove",
           #                      position="topright",prefix = "") %>% 
@@ -482,7 +486,7 @@ shinyApp(
           leaflet::addLayersControl(#overlayGroups = c("Hydrologic Unit 8 (HU8)","Land Cover (NLCD 2016)","Value"),
             #overlayGroups = c("Value"),
             baseGroups = c("OpenStreetMap","National Geographic World Map"),
-            overlayGroups = c("Basins (HUC6)"),
+            overlayGroups = c("Satellite Imagery of cyanobacteria","Basins (HUC6)"),
             position = "topleft",
             options = layersControlOptions(collapsed = TRUE, autoZIndex = FALSE)) %>% 
           #leaflet::hideGroup(c("Hydrologic Unit 8 (HU8)","Land Cover (NLCD 2016)"))

@@ -1,4 +1,4 @@
-# Oregon Department of Environmental Quality Map Application for Freshwater Cyanobacteria Harmful Algal Blooms
+# Satellite Imagery of Cyanobacteria in Oregon Lakes and Reservoirs
 
 This web application provides an interactive map to view satellite derived data on cyanobacteria harmful algal blooms in freshwater ecosystems of Oregon. Satellite data come from the US EPA CyAN project (https://www.epa.gov/water-research/cyanobacteria-assessment-network-cyan) and are updated on a regular basis.
 
@@ -8,7 +8,7 @@ This app requires the ShinydashboardPlus package version 2.0.0.9000. The app.R h
 
 GNU General Public License v3 (GPLv3)
 
-ODEQ HABs Map Application, Copyright (C) 2020-2021, Oregon Department of Environmental Quality
+Satellite Imagery of Cyanobacteria in Oregon Lakes and Reservoirs Map Application and Data Viewer, Copyright (C) 2020-2021, Oregon Department of Environmental Quality
 
 This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
 

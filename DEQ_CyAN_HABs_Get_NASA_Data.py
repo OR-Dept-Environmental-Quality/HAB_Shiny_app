@@ -22,6 +22,7 @@
 from CyANconfig import * # Configuration file with file paths and website addresses; place in same folder as this python script
 import sys
 import urllib.request
+import ssl
 import shutil
 import os
 import datetime
@@ -44,6 +45,7 @@ if sys.version_info < (3, 7):
 # baseurl = "https://oceancolor.gsfc.nasa.gov/CYAN/OLCI/"
 
 try:
+    ssl._create_default_https_context = ssl._create_unverified_context
     urllib.request.urlopen(baseurl)
     print("Valid url:", baseurl)
 except:

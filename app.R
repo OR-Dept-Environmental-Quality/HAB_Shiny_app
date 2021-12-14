@@ -5,14 +5,14 @@ library(shinyWidgets)
 library(shinythemes)
 library(shinydashboard)
 library(shinydashboardPlus)
-library(shinyEffects)
+#library(shinyEffects)
 library(shinycssloaders)
 library(raster)
 library(leaflet)
 library(leaflet.extras)
-library(leafem)
-library(mapview)
-library(plainview)
+#library(leafem)
+#library(mapview)
+#library(plainview)
 library(scales)
 library(plotly)
 library(DT)
@@ -753,7 +753,7 @@ shinyApp(
     
     output$tbl7dadm <- renderUI({
       tagList(
-        bsModal("modal", title(), trigger = "a", DT::renderDataTable(tbl.data()), size = "large"),
+        shinyBS::bsModal("modal", title(), trigger = "a", DT::renderDataTable(tbl.data()), size = "large"),
         actionButton("a", "Table of Waterbodies Ranked by 7DADM")
       )
     })

@@ -452,7 +452,8 @@ shinyApp(
         
         lookup.date %>% 
           dplyr::filter(Date %in% as.Date(input$date_map)) %>% 
-          dplyr::mutate(Day.dta = ifelse(Day.dta < 100, paste0("0",as.character(Day.dta)),Day.dta)) %>% 
+          dplyr::mutate(Day.dta = ifelse(Day.dta < 10, paste0("00",as.character(Day.dta)),
+                                         ifelse((Day.dta >= 10 & Day.dta < 100), paste0("0",as.character(Day.dta)), Day.dta))) %>% 
           dplyr::mutate(map_day = paste0(Year.dta,Day.dta))
         
       })

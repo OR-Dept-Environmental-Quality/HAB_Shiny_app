@@ -25,12 +25,12 @@ huc6 <- rgdal::readOGR(dsn = "./data/WBD_HU6.shp",layer = "WBD_HU6")
 pal.huc6 <- leaflet::colorFactor(palette = "Paired", domain = unique(sort(huc6@data$HU_6_NAME)))
 
 # (2) Plot and Table ----
-dta1 <- readxl::read_xlsx("./data/HAB_resolvablelakes_2016_2020.xlsx",
-                          sheet = "HAB_resolvablelakes_2016_2020")%>% 
+dta1 <- readxl::read_xlsx("./data/HAB_resolvablelakes_2016_2021.xlsx",
+                          sheet = "HAB_resolvablelakes_2016_2021")%>% 
   dplyr::filter(!GNISIDNAME == "Goose Lake_01520146") %>% # located in the WA state
   dplyr::filter(GNISIDNAME %in% unique(sort(lakes.resolvable@data$GNISIDNAME)))
 
-dta2 <- readxl::read_xlsx("./data/HAB_resolvablelakes_2021.xlsx",
+dta2 <- readxl::read_xlsx("./data/HAB_resolvablelakes_2022.xlsx",
                           sheet = "HAB_resolvable_lake_data")%>% 
   dplyr::filter(!GNISIDNAME == "Goose Lake_01520146") %>% # located in the WA state
   dplyr::filter(GNISIDNAME %in% unique(sort(lakes.resolvable@data$GNISIDNAME)))

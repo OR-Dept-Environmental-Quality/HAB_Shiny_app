@@ -11,7 +11,7 @@ library(zoo)
 
 # Get update of NASA data----
 # Need to have ArcPro on your machine; modify path in the script to point to the correct version of python
-#source("Update_NASA_imagery.R")
+# source("Update_NASA_imagery.R")
 
 # (1) Map: shapefile ----
 lakes.resolvable <- rgdal::readOGR(dsn = "./data/NHDwaterbody_resolvable_lakes_dissolved_oregon_clean_huc6.shp",
@@ -66,7 +66,6 @@ dta <- rbind(dta1,dta2) %>%
 #  dplyr::mutate(rollmax_7 = format(round(rollmax_7,0), big.mark=",", scientific=FALSE)) %>% 
 #  dplyr::select(`Waterbody_GNISID` = GNISIDNAME,
 #                `7-Day Max Moving Average` = rollmax_7)
-
 
 # (3) Date Lookup Table ----
 fulldays <- readxl::read_xlsx("./data/calendar-dates.xlsx",

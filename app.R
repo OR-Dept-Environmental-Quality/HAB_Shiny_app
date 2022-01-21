@@ -237,7 +237,9 @@ shinyApp(
         
         tags$div(span(HTML(paste("Access Sentinel 2 imagery through",
                                   a("Sentinel Hub", 
-                                    href="https://apps.sentinel-hub.com/sentinel-playground/?source=S2L2A&lat=40.4&lng=-3.730000000000018&zoom=12&preset=1_TRUE_COLOR&layers=B01,B02,B03&maxcc=20&gain=1.0&gamma=1.0&time=2021-01-01%7C2021-07-12&atmFilter=&showDates=false"),
+                                    href=paste0("https://apps.sentinel-hub.com/sentinel-playground/?source=S2L2A&lat=44.04337759834022&lng=-121.8779294192791&zoom=7&preset=1_TRUE_COLOR&layers=B01,B02,B03&maxcc=97&gain=1.0&gamma=1.0&time=2021-07-01%7C",
+                                                today(),
+                                                "&atmFilter=&showDates=false")),
                                   ".")),
                       style = "color: black; font-size: 20px"))
         

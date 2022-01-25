@@ -61,11 +61,11 @@ year = str(date.today().year)
 print("Year:", year)
 
 # Get the start date
-# tif_file_path = '\\\\deqhq1\\wq-share\\Harmful Algal Blooms Coordination Team\\HAB_Shiny_app\\data\\2022\\*.tif'
-# list_of_files = glob.glob(tif_file_path)  # Change directory as needed
-# latest_file = max(list_of_files, key=os.path.getctime)  # Getting the last day from the last update
-# hab_day_start = int(latest_file[85:88]) + 1  # assumes weekly updates; adjust as needed
-hab_day_start = int(1)
+tif_file_path = '\\\\deqhq1\\wq-share\\Harmful Algal Blooms Coordination Team\\HAB_Shiny_app\\data\\2022\\*.tif'
+list_of_files = glob.glob(tif_file_path)  # Change directory as needed
+latest_file = max(list_of_files, key=os.path.getctime)  # Getting the last day from the last update
+hab_day_start = int(latest_file[85:88]) + 1  # assumes weekly updates; adjust as needed
+# hab_day_start = int(1)
 print("start day:", hab_day_start)
 
 hab_day_end = date.today().timetuple().tm_yday - 1  # assumes data from the previous day available
@@ -294,7 +294,7 @@ for i in range(0, hab_days_length):
     # append new data to exsiting excel spreadhseet
     # BKK - spreadhseet and worksheet shouldn't have date
     # dir_Shiny = "\\\\deqhq1\\wq-share\\Harmful Algal Blooms Coordination Team\\HAB_Shiny_app\\data"
-    thetable = os.path.join(dir_Shiny, 'HAB_resolvablelakes_2021.xlsx')
+    thetable = os.path.join(dir_Shiny, 'HAB_resolvablelakes_2022.xlsx')
     writer = pd.ExcelWriter(thetable, engine='openpyxl', mode='a')
     writer.book = load_workbook(thetable)
     writer.sheets = dict((ws.title, ws) for ws in writer.book.worksheets)

@@ -195,7 +195,7 @@ shinyApp(
           #                          label = tags$h4("Select a Basin:"),
           #                          choices = list(
           #                            "Oregon",
-          #                            "HUC6 Basin" = unique(sort(huc6@data$HU_6_NAME))
+          #                            "HUC6 Basin" = unique(sort(huc6$HU_6_NAME))
           #                          ),
           #                          multiple = FALSE),
           
@@ -206,7 +206,7 @@ shinyApp(
                                     label = tags$h4("Select a Waterbody:"),
                                     choices = list(
                                       "Oregon",
-                                      "Waterbody Name_GNISID" = unique(sort(lakes.resolvable$GNISIDNAME))
+                                      "Waterbody Name_GNISID" = sort(unique(lakes.resolvable$GNISIDNAME))
                                     ),
                                     multiple = FALSE),
           
@@ -236,11 +236,11 @@ shinyApp(
         ), # Map box END
         
         tags$div(span(HTML(paste("Access Sentinel 2 imagery through",
-                                  a("Sentinel Hub", 
-                                    href=paste0("https://apps.sentinel-hub.com/sentinel-playground/?source=S2L2A&lat=44.04337759834022&lng=-121.8779294192791&zoom=7&preset=1_TRUE_COLOR&layers=B01,B02,B03&maxcc=97&gain=1.0&gamma=1.0&time=2021-07-01%7C",
-                                                today(),
-                                                "&atmFilter=&showDates=false")),
-                                  ".")),
+                                 a("Sentinel Hub", 
+                                   href=paste0("https://apps.sentinel-hub.com/sentinel-playground/?source=S2L2A&lat=44.04337759834022&lng=-121.8779294192791&zoom=7&preset=1_TRUE_COLOR&layers=B01,B02,B03&maxcc=97&gain=1.0&gamma=1.0&time=2021-07-01%7C",
+                                               today(),
+                                               "&atmFilter=&showDates=false")),
+                                 ".")),
                       style = "color: black; font-size: 20px"))
         
       ), # Part 1 box END
@@ -400,18 +400,18 @@ shinyApp(
         
         one.lake <- reactive({
           
-          lakes.resolvable[which(lakes.resolvable@data$GNISIDNAME == input$waterbody),]
+          lakes.resolvable[which(lakes.resolvable$GNISIDNAME == input$waterbody),]
           
         })
         
         bounds <- reactive({
           
-          data.frame(bbox(one.lake()))
+          sf::st_bbox(one.lake())
           
         })
         
         leafletProxy("map") %>% 
-          leaflet::fitBounds(lng1=bounds()$min[1], lat1=bounds()$min[2], lng2=bounds()$max[1], lat2=bounds()$max[2])
+          leaflet::fitBounds(lng1=bounds()[[1]], lat1=bounds()[[2]], lng2=bounds()[[3]], lat2=bounds()[[4]])
       }
       
     })
@@ -429,7 +429,7 @@ shinyApp(
         
         one.basin <- reactive({
           
-          huc6[which(huc6@data$HU_6_NAME == input$basin),]
+          huc6[which(huc6$HU_6_NAME == input$basin),]
           
         })
         
@@ -485,7 +485,8 @@ shinyApp(
           #leafem::addImageQuery(rst(), layerId = "Value", digits = 0, project = TRUE, type = "mousemove",
           #                      position="topright",prefix = "") %>% 
           leaflet::addLegend(pal = pal.map, values = thevalues, title = "Cyanobacteria (cells/mL)", position = "topright",
-                             labFormat = function(type,cuts,p){paste0(labels)}) %>% 
+                             labFormat = function(type,cuts,p){paste0(labels)},opacity = 1
+                             ) %>% 
           leaflet::addLayersControl(#overlayGroups = c("Hydrologic Unit 8 (HU8)","Land Cover (NLCD 2016)","Value"),
             #overlayGroups = c("Value"),
             baseGroups = c("OpenStreetMap","National Geographic World Map"),
@@ -563,7 +564,7 @@ shinyApp(
                       name = unique(df.box()$GNISIDNAME)) %>% 
         add_trace(x = input$date_map,
                   y = 100000,
-                  line = list(color = "red")) %>% 
+                  line = list(color = "#006d2c")) %>% 
         plotly::layout(xaxis = list(title = "",
                                     zeroline = FALSE,
                                     showline = FALSE,
@@ -665,13 +666,29 @@ shinyApp(
         plotly::layout(yaxis = list(type = type(),
                                     title = yaxis())) %>% 
         plotly::add_trace(y = 100000, mode = "lines",
-                          line = list(shape = 'spline', color = 'red', width = 3),
-                          name = "WHO Threshold",
-                          legendgroup = "who",
+                          line = list(shape = 'spline', color = '#006d2c', width = 3),
+                          name = "Very High",
+                          legendgroup = "line1",
+                          showlegend = FALSE) %>% 
+        plotly::add_trace(y = 30000, mode = "lines",
+                          line = list(shape = 'spline', color = '#2ca25f', width = 3),
+                          name = "High",
+                          legendgroup = "line2",
                           showlegend = FALSE) %>% 
         plotly::layout(annotations = list(x = max(df()$Date),
                                           y = 100000,
-                                          text = "WHO Threshold",
+                                          text = "Very High",
+                                          font = list(size = 12),
+                                          xref = "x",
+                                          yref = "y",
+                                          showarrow = TRUE,
+                                          arrowhead = 3,
+                                          arrowsize = 1,
+                                          ax = -60,
+                                          ay = -20)) %>% 
+        plotly::layout(annotations = list(x = max(df()$Date),
+                                          y = 30000,
+                                          text = "High",
                                           font = list(size = 12),
                                           xref = "x",
                                           yref = "y",
@@ -684,7 +701,6 @@ shinyApp(
     })
     
     # (3) Tables ----
-    
     # _ Data table ----
     df_tbl <- reactive({
       
@@ -743,8 +759,8 @@ shinyApp(
         #dplyr::left_join(tbl.data.7days(),by="GNISIDNAME") %>% 
         #dplyr::filter(mean_7DayMax == MAX_cellsml) %>% 
         dplyr::arrange(desc(mean_7DayMax)) %>% 
-        dplyr::left_join(lakes.resolvable@data, by = "GNISIDNAME") %>% 
-        dplyr::mutate(Basin = ifelse(Name_1 == "Willamette",Name,Name_1)) %>% 
+        dplyr::left_join(lakes.resolvable, by = "GNISIDNAME") %>% 
+        dplyr::mutate(Basin = ifelse(`HU_6_NAME` == "Willamette",`HU_8_NAME`,`HU_6_NAME`)) %>% 
         dplyr::select(GNISIDNAME,Basin,mean_7DayMax) %>% 
         dplyr::distinct(GNISIDNAME, .keep_all = TRUE) %>% 
         dplyr::mutate(mean_7DayMax = ifelse(mean_7DayMax<= 6310, "Non-detect",

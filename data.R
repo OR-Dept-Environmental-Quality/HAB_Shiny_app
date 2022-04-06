@@ -13,34 +13,20 @@ library(zoo)
 # Need to have ArcPro on your machine; modify path in the script to point to the correct version of python
 # source("Update_NASA_imagery.R")
 
-# (1) Map: shapefile ----
-lakes.resolvable <- rgdal::readOGR(dsn = "./data/NHDwaterbody_resolvable_lakes_dissolved_oregon_clean_huc6.shp",
-                                   layer = "NHDwaterbody_resolvable_lakes_dissolved_oregon_clean_huc6")
+# (1) Data Table ----
+dta1 <- readxl::read_xlsx("./data/Resolvable_Lakes.xlsx", sheet = "cyan_resolvable_lakes")
 
-state.boundary <- sf::st_read("./data/state_boundary_blm.shp") %>% 
-  st_transform(crs="+init=epsg:4326")
+dta2 <- readxl::read_xlsx("./data/HAB_resolvablelakes_2022.xlsx", sheet = "HAB_resolvable_lake_data") %>% 
+  #dplyr::filter(!GNISIDNAME == "Goose Lake_01520146") %>% # located in the WA state
+  #dplyr::filter(GNISIDNAME %in% unique(sort(lakes.resolvable$GNISIDNAME))) %>% 
+  dplyr::filter(GNISIDNAME %in% dta1$inApp) # filter out saline lakes
 
-huc6 <- rgdal::readOGR(dsn = "./data/WBD_HU6.shp",layer = "WBD_HU6")
+dta3 <- readxl::read_xlsx("./data/HAB_resolvablelakes_2016_2021.xlsx",sheet = "HAB_resolvablelakes_2016_2021") %>% 
+  #dplyr::filter(!GNISIDNAME == "Goose Lake_01520146") %>% # located in the WA state
+  #dplyr::filter(GNISIDNAME %in% unique(sort(lakes.resolvable$GNISIDNAME))) %>% 
+  dplyr::filter(GNISIDNAME %in% dta1$inApp) # filter out saline lakes
 
-pal.huc6 <- leaflet::colorFactor(palette = "Paired", domain = unique(sort(huc6@data$HU_6_NAME)))
-
-# (2) Plot and Table ----
-dta1 <- readxl::read_xlsx("./data/HAB_resolvablelakes_2016_2021.xlsx",
-                          sheet = "HAB_resolvablelakes_2016_2021")%>% 
-  dplyr::filter(!GNISIDNAME == "Goose Lake_01520146") %>% # located in the WA state
-  dplyr::filter(GNISIDNAME %in% unique(sort(lakes.resolvable@data$GNISIDNAME)))
-
-dta2 <- readxl::read_xlsx("./data/HAB_resolvablelakes_2022.xlsx",
-                          sheet = "HAB_resolvable_lake_data")%>% 
-  dplyr::filter(!GNISIDNAME == "Goose Lake_01520146") %>% # located in the WA state
-  dplyr::filter(GNISIDNAME %in% unique(sort(lakes.resolvable@data$GNISIDNAME)))
-
-dta3 <- readxl::read_xlsx("./data/Resolvable_Lakes.xlsx",
-                          sheet = "cyan_resolvable_lakes")
-
-GNISNameID <- unique(sort(dta3$wi_DWSA))
-
-dta <- rbind(dta1,dta2) %>% 
+dta <- rbind(dta2,dta3) %>% 
   dplyr::rename(Mean = MEAN_cellsml,
                 Maximum = MAX_cellsml,
                 Minimum = MIN_cellsml) %>% 
@@ -49,7 +35,8 @@ dta <- rbind(dta1,dta2) %>%
   dplyr::mutate(GNISIDNAME = paste0(GNISNAME,"_",GNISID)) %>% 
   dplyr::mutate(Date = lubridate::ymd(Date)) %>% 
   dplyr::arrange(desc(Date)) %>% 
-  dplyr::mutate(wi_DWSA = ifelse(GNISIDNAME %in% GNISNameID, "Yes", "No"))
+  dplyr::mutate(wi_DWSA = ifelse(GNISIDNAME %in% dta1$wi_DWSA, "Yes", "No"))
+ 
 
 #dta_rolling_ave <- dta2 %>% 
 #  dplyr::arrange(GNISIDNAME,desc(Date)) %>% 
@@ -67,7 +54,7 @@ dta <- rbind(dta1,dta2) %>%
 #  dplyr::select(`Waterbody_GNISID` = GNISIDNAME,
 #                `7-Day Max Moving Average` = rollmax_7)
 
-# (3) Date Lookup Table ----
+# (2) Date Lookup Table ----
 fulldays <- readxl::read_xlsx("./data/calendar-dates.xlsx",
                               sheet = "calendar-dates") %>% 
   dplyr::mutate(Date = lubridate::ymd(Date))
@@ -84,18 +71,34 @@ lookup.date <- dta %>%
 missing.dates <- lookup.date %>% 
   dplyr::filter(is.na(Day.dta))
 
+# (3) Map: shapefiles ----
+lakes.resolvable <- sf::st_read(dsn = "./data/updatedValidLakes_CyAN_OR.shp",
+                                layer = "updatedValidLakes_CyAN_OR") %>% 
+  st_transform(crs = 4326) %>% 
+  dplyr::filter(GNISIDNAME %in% dta1$inApp) # filter out saline lakes
+
+state.boundary <- sf::st_read("./data/state_boundary_blm.shp") %>% 
+  st_transform(crs = 4326)
+
+huc6 <- sf::st_read(dsn = "./data/WBD_HU6.shp",layer = "WBD_HU6")%>% 
+  st_transform(crs = 4326)
+
+pal.huc6 <- leaflet::colorFactor(palette = "Paired", domain = unique(sort(huc6$HU_6_NAME)))
+
 # (4) Map: raster ----
 # Raster color 
-thevalues <-c(0,6310,13000,25000,50000,100000,200000,400000,800000,1000000,3000000,6000000,7000000)
-paletteFunc <- grDevices::colorRampPalette(c('gray','yellow','orange','dark red'))
-palette     <- paletteFunc(12)
+thevalues <- c(0,6310,20000,100000,7000000)
+#paletteFunc <- grDevices::colorRampPalette(c('#bdbdbd','#66c2a4','#2ca25f','#006d2c'))
+#palette     <- paletteFunc(4)
+palette <- c('#bdbdbd','#66c2a4','#2ca25f','#006d2c')
 
 pal.map <- leaflet::colorBin(palette = palette,
-                             bins = c(0,6310,13000,25000,50000,100000,200000,400000,800000,1000000,3000000,6000000,7000000),
-                             domain = c(0,6310,13000,25000,50000,100000,200000,400000,800000,1000000,3000000,6000000,7000000),
+                             bins = c(0,6310,20000,100000,7000000),
+                             domain = c(0,6310,20000,100000,7000000),
                              na.color = "transparent")
+
 # Legend labels
-labels = c("Non-detect","6,311 - 13,000","13,000 - 25,000","25,000 - 50,000","50,000 - 100,000","100,000 - 200,000","200,000 - 400,000","400,000 - 800,000","800,000 - 1,000,000","1,000,000 - 3,000,000","3,000,000 - 6,000,000","> 6,000,000")
+labels = c("Non-detect","Low: 6,311 - 20,000","Moderate: 20,000 - 100,000","High: >100,000")
 # ----
 #rm(dta1); rm(dta2); rm(dta3)
 save.image(file = "data.RData")

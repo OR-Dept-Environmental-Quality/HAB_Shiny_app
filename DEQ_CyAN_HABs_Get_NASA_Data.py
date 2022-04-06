@@ -44,8 +44,8 @@ if sys.version_info < (3, 7):
     sys.exit()
 
 # Define the base URL and check that it is a valid address
-baseurl = "https://oceancolor.gsfc.nasa.gov/CYAN/OLCI/"
-# baseurl = "https://oceandata.sci.gsfc.nasa.gov/directaccess/CYAN/L3SMI/"
+# baseurl = "https://oceancolor.gsfc.nasa.gov/CYAN/OLCI/"
+
 
 try:
     ssl._create_default_https_context = ssl._create_unverified_context
@@ -61,7 +61,7 @@ year = str(date.today().year)
 print("Year:", year)
 
 # Get the start date
-tif_file_path = '\\\\deqhq1\\wq-share\\Harmful Algal Blooms Coordination Team\\HAB_Shiny_app\\data\\2022\\*.tif'
+# tif_file_path = '\\\\deqhq1\\wq-share\\Harmful Algal Blooms Coordination Team\\HAB_Shiny_app\\data\\2022\\*.tif'
 list_of_files = glob.glob(tif_file_path)  # Change directory as needed
 latest_file = max(list_of_files, key=os.path.getctime)  # Getting the last day from the last update
 hab_day_start = int(latest_file[85:88]) + 1  # assumes weekly updates; adjust as needed
@@ -236,7 +236,7 @@ for i in range(0, hab_days_length):
 
     # Process: Zonal Statistics as Table
     env.workspace = mosaicdir
-    arcpy.gp.ZonalStatisticsAsTable_sa(zones, "GNISIDName", zonalraster, thestatsname, "DATA", "ALL")
+    arcpy.gp.ZonalStatisticsAsTable_sa(zones, "GNISIDNAME", zonalraster, thestatsname, "DATA", "ALL")
 
     arcpy.DeleteField_management(thestatsname, ["ZONE_CODE", "SUM", "MEDIAN", "PCT90"])
 

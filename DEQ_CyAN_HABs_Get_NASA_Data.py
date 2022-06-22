@@ -65,6 +65,7 @@ print("Year:", year)
 list_of_files = glob.glob(tif_file_path)  # Change directory as needed
 latest_file = max(list_of_files, key=os.path.getctime)  # Getting the last day from the last update
 hab_day_start = int(latest_file[85:88]) + 1  # assumes weekly updates; adjust as needed
+# Line 68 used when a new year starts, and Line 66 need to be muted
 # hab_day_start = int(1)
 print("start day:", hab_day_start)
 

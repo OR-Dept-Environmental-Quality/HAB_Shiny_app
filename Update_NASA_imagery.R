@@ -1,5 +1,7 @@
 # Script to run python script used to update satellite data on cyanobacteria
 
+Sys.setenv(RETICULATE_PYTHON = "C:\\Program Files\\ArcGIS\\Pro\\bin\\Python\\envs\\arcgispro-py3\\python.exe") # Need to correct python default in R
+
 library(reticulate)   # Bridging R and Python
 
 # Need to point to the ArcPro Python version - Change as needed

@@ -24,7 +24,8 @@ dta2 <- readxl::read_xlsx("./data/HAB_resolvablelakes_2022.xlsx", sheet = "HAB_r
 dta3 <- readxl::read_xlsx("./data/HAB_resolvablelakes_2016_2021.xlsx",sheet = "HAB_resolvablelakes_2016_2021") %>% 
   #dplyr::filter(!GNISIDNAME == "Goose Lake_01520146") %>% # located in the WA state
   #dplyr::filter(GNISIDNAME %in% unique(sort(lakes.resolvable$GNISIDNAME))) %>% 
-  dplyr::filter(GNISIDNAME %in% dta1$inApp) # filter out saline lakes
+  dplyr::filter(GNISIDNAME %in% dta1$inApp) %>% # filter out saline lakes
+  dplyr::select(-c(13,14)) # remove two last columns for excel data summary
 
 dta <- rbind(dta2,dta3) %>% 
   dplyr::rename(Mean = MEAN_cellsml,
@@ -72,8 +73,8 @@ missing.dates <- lookup.date %>%
   dplyr::filter(is.na(Day.dta))
 
 # (3) Map: shapefiles ----
-lakes.resolvable <- sf::st_read(dsn = "./data/updatedValidLakes_CyAN_OR.shp",
-                                layer = "updatedValidLakes_CyAN_OR") %>% 
+lakes.resolvable <- sf::st_read(dsn = "./data/CyAN_Waterbodies.shp",
+                                layer = "CyAN_Waterbodies") %>% 
   st_transform(crs = 4326) %>% 
   dplyr::filter(GNISIDNAME %in% dta1$inApp) # filter out saline lakes
 

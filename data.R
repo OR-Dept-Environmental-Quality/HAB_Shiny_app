@@ -75,6 +75,7 @@ missing.dates <- lookup.date %>%
 # (3) Map: shapefiles ----
 lakes.resolvable <- sf::st_read(dsn = "./data/CyAN_Waterbodies.shp",
                                 layer = "CyAN_Waterbodies") %>% 
+  sf::st_zm() %>% 
   st_transform(crs = 4326) %>% 
   dplyr::filter(GNISIDNAME %in% dta1$inApp) # filter out saline lakes
 

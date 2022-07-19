@@ -11,7 +11,7 @@ library(zoo)
 
 # Get update of NASA data----
 # Need to have ArcPro on your machine; modify path in the script to point to the correct version of python
-# source("Update_NASA_imagery.R")
+source("Update_NASA_imagery.R")
 
 # (1) Data Table ----
 dta1 <- readxl::read_xlsx("./data/Resolvable_Lakes.xlsx", sheet = "cyan_resolvable_lakes")

@@ -2,6 +2,10 @@
 
 Sys.setenv(RETICULATE_PYTHON = "C:\\Program Files\\ArcGIS\\Pro\\bin\\Python\\envs\\arcgispro-py3\\python.exe") # Need to correct python default in R
 
+# Need to use version 1.22 for now.
+#require(devtools)
+#install_version("reticulate", version = "1.22", repos = "http://cran.us.r-project.org")
+
 library(reticulate)   # Bridging R and Python
 
 # Need to point to the ArcPro Python version - Change as needed

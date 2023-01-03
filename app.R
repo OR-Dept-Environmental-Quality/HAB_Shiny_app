@@ -279,7 +279,7 @@ shinyApp(
             choices = c("Maximum" = "Maximum",
                         "Mean" = "Mean",
                         "Minimum" = "Minimum"),
-            selected = "Mean"),
+            selected = c("Maximum","Mean")),
           
           # __ Plot types ----
           checkboxGroupInput(

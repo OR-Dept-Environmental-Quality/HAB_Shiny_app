@@ -12,16 +12,17 @@ library(zoo)
 # Get update of NASA data----
 # Need to have ArcPro on your machine; modify path in the script to point to the correct version of python
 # source("Update_NASA_imagery.R")
+# source("dbf2excel.R")
 
 # (1) Data Table ----
 dta1 <- readxl::read_xlsx("./data/Resolvable_Lakes.xlsx", sheet = "cyan_resolvable_lakes")
 
-dta2 <- readxl::read_xlsx("./data/HAB_resolvablelakes_2022.xlsx", sheet = "HAB_resolvable_lake_data") %>% 
+dta2 <- readxl::read_xlsx("./data/HAB_resolvablelakes_2023.xlsx", sheet = "HAB_resolvable_lake_data") %>% 
   #dplyr::filter(!GNISIDNAME == "Goose Lake_01520146") %>% # located in the WA state
   #dplyr::filter(GNISIDNAME %in% unique(sort(lakes.resolvable$GNISIDNAME))) %>% 
   dplyr::filter(GNISIDNAME %in% dta1$inApp) # filter out saline lakes
 
-dta3 <- readxl::read_xlsx("./data/HAB_resolvablelakes_2016_2021.xlsx",sheet = "HAB_resolvablelakes_2016_2021") %>% 
+dta3 <- readxl::read_xlsx("./data/HAB_resolvablelakes_2016_2022.xlsx",sheet = "HAB_resolvablelakes_2016_2022") %>% 
   #dplyr::filter(!GNISIDNAME == "Goose Lake_01520146") %>% # located in the WA state
   #dplyr::filter(GNISIDNAME %in% unique(sort(lakes.resolvable$GNISIDNAME))) %>% 
   dplyr::filter(GNISIDNAME %in% dta1$inApp)# filter out saline lakes

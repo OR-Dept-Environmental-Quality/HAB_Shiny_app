@@ -737,7 +737,7 @@ shinyApp(
     title <- reactive({
       
       paste0("Waterbodies ranked by the 7-Day Average Daily Maximum (7DADM) of cyanobacteria abundance (cells/mL) during the 7 days from ", 
-             as.Date(input$date_map)-7, " to ",input$date_map, 
+             as.Date(input$date_map)-6, " to ",input$date_map, 
              ".")
       
     })
@@ -746,7 +746,7 @@ shinyApp(
       
       dta2 %>% 
         dplyr::arrange(GNISIDNAME, desc(Date)) %>% 
-        dplyr::filter((as.Date(Date) <= as.Date(input$date_map)) & (as.Date(Date) >= as.Date(input$date_map)-7))
+        dplyr::filter((as.Date(Date) <= as.Date(input$date_map)) & (as.Date(Date) >= as.Date(input$date_map)-6))
       
     })
     

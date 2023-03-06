@@ -1,0 +1,14 @@
+# CyANconfig.jl
+
+baseurl = "https://oceancolor.gsfc.nasa.gov/CYAN/OLCI/"
+# tif_file_path need to be updated for the year folder:
+tif_file_path = raw"\\deqhq1\wq-share\Harmful Algal Blooms Coordination Team\HAB_Shiny_app\data\2022\*.tif"
+
+extract_base = raw"\\deqhq1\wq-share\Harmful Algal Blooms Coordination Team\Satellite data\cyan\"
+zones = raw"\\deqhq1\\WQ-Share\\Harmful Algal Blooms Coordination Team\\HAB_Shiny_app\\data\\CyAN_Waterbodies.shprawrawraw"
+dir_Shiny = raw"\\deqhq1\wq-share\Harmful Algal Blooms Coordination Team\HAB_Shiny_app\data"
+themask = raw"\\deqhq1\wq-share\Harmful Algal Blooms Coordination Team\Satellite data\cyanHAB_deschutes2020.gdb\stateline_buffer50albers"
+theextent = raw"\\deqhq1\wq-share\Harmful Algal Blooms Coordination Team\Satellite data\cyanHAB_deschutes2020.gdb\stateline_buffer50web"
+
+# When the new data site is used:
+# baseurl = "https://oceandata.sci.gsfc.nasa.gov/directaccess/CYAN/L3SMI/"

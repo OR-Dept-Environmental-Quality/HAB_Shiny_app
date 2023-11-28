@@ -26,19 +26,48 @@ using Pkg
 #Pkg.add("PyPlot")
 #Pkg.add("Images")
 #Pkg.add("DelimitedFiles")
+#Pkg.add("Rasters")
+#Pkg.add("GeoArrays")
+#Pkg.add("GMT")
+#Pkg.add("GeoStats")
+#Pkg.add("GeoInterface")
+#Pkg.add("GeoData")
+#Pkg.add("DataFrames")
+#Pkg.add("Shapefile")
+#Pkg.add("StatsBase")
+#Pkg.add("CoordinateTransformations")
+#Pkg.add("Proj")
+#Pkg.add("Statistics")
+#Pkg.add("Dates")
+#Pkg.add("PyCall")
+#Pkg.add("GeoFormatTypes")
+#Pkg.add(PackageSpec(name="rasterio", version="1.2.8"))
 
 # Use packages
 using HTTP
 using Dates
 using Tar
 using Downloads
-#using GDAL
+using GDAL
 using FileIO
-#using GeoStats
+using GeoStats, GeoInterface, GeoData
 using ArchGDAL
 using PyPlot
 using Images
 using DelimitedFiles
+using Rasters
+using GeoArrays
+using Plots
+using GMT
+using DataFrames
+using Shapefile
+using StatsBase
+using CoordinateTransformations
+using Statistics
+using Dates
+using PyCall
+using Proj
+using GeoFormatTypes
 
 # Set working directory
 include("CyANwd.jl")
@@ -120,8 +149,6 @@ url = [baseurl * string(current_year) * "/" * h * "/" * f for (h, f) in zip(hab_
 
 # Download, extract, and rename imagery for a date range in Oregon (1_1, 1_2, 2_1, 2_2)
 
-# First need to create a vector of tif file 
-
 for i in 1:length(hab_days)
     println(url[i])
 
@@ -179,10 +206,7 @@ for i in folder
         writedlm(joinpath(extract_base, i, "csv", j[1:11] * ".csv"), out_cells, ',')
     end
     # Need to get info for writing tif files later
-    dvr = ArchGDAL.getdriver(tmp_data)
-    wt = ArchGDAL.width(tmp_data)
-    ht = ArchGDAL.height(tmp_data)
-    ArchGDAL.getgeotransform(tmp_data)
+    
 end    
 
 # Create joined matrix files
@@ -195,168 +219,157 @@ for i in folder
     tmp_file_2_1 = readdlm(joinpath(workfolder, i[2:8] * "_2_1.csv"), ',', Float64)
     tmp_file_2_2 = readdlm(joinpath(workfolder, i[2:8] * "_2_2.csv"), ',', Float64)
 
-    tmp_file_1 = vcat(tmp_file_1_1, tmp_file_1_2)
-    tmp_file_2 = vcat(tmp_file_2_1, tmp_file_2_2)
-    tmp_file = hcat(tmp_file_1, tmp_file_2)
+    tmp_file_1 = hcat(tmp_file_1_1, tmp_file_1_2)
+    tmp_file_2 = hcat(tmp_file_2_1, tmp_file_2_2)
+    tmp_file = vcat(tmp_file_1, tmp_file_2)
     writedlm(joinpath(extract_base, i, "csv", i[2:8] * ".csv"), tmp_file, ',')
 end
 
-# Create mosiac tif files
+# Workspace to figure out projections and zonal statistics
+
+# Using Rasters package
+test_rs = Rasters.Raster(joinpath(extract_base, "L2023032.L3m_DAY_CYAN_CI_cyano_CYAN_CONUS_300m", "2023032_2_2.tif"))
+Plots.plot(test_rs)
+
+Rasters.crs(test_rs)
+
+NASA_EPSG = GeoFormatTypes.EPSG(4269)
+Oregon_EPSG = GeoFormatTypes.EPSG(2992)
+typeof(Oregon_EPSG)
+
+Rasters.reproject
+ArchGDAL.reproject
+
+test_rs[:, :]
+
+test_rs2 = ArchGDAL.readraster(joinpath(extract_base, "L2023032.L3m_DAY_CYAN_CI_cyano_CYAN_CONUS_300m", "2023032_2_2.tif"))
+typeof(test_rs2)
+GeoArrays.coords(test_rs2)
 
 
-# Convert to cells/ml , mosaic 4 tiles into one oregon image, calc zonal stats for resolvable lakes
-# Setnull and cellsml
+test_rs2.[:,:]
+ArchGDAL.getcoorddim(test_rs2)
 
-# Start here
-readdir(joinpath(extract_base, folder[1]))
-tmp_data = ArchGDAL.read(joinpath(extract_base, folder[1], "2023031_1_1.tif"))
+Rasters.reproject()
 
-ArchGDAL.getdriver(tmp_data)
-ArchGDAL.nraster(tmp_data)
-tmp_data1 = ArchGDAL.getband(tmp_data, 1)
-typeof(tmp_data1)
+typeof(test_rs)
 
-tmp_data2 = ArchGDAL.imread(joinpath(extract_base, folder[1], "2023031_1_2.tif"))
-
-tmp_data3 = float(tmp_data1)
+dims(test_rs)
+test_rs[Y(1)]
+test_rs
 
 
 
-tmp_data3[tmp_data3 .== 255] .= NaN
 
-typeof(tmp_data3)
-
-ArchGDAL.getgeotransform(tmp_data)
-
-crs = ArchGDAL.importEPSG(5070)
-
-crs = ArchGDAL.toWKT(ArchGDAL.importEPSG(5070))
-
-ArchGDAL.create(joinpath(extract_base, folder[1], "cellsml", "2023031_1_1.tif"),
-                driver = ArchGDAL.getdriver(tmp_data),
-                width = ArchGDAL.width(tmp_data),
-                height = ArchGDAL.height(tmp_data),
-                nbands = 1,
-                dtype = Float64
-                ) do dataset
-                        ArchGDAL.write!(dataset, tmp_data3, 1)
-                        ArchGDAL.setgeotransform!(dataset, ArchGDAL.getgeotransform(tmp_data))
-                        ArchGDAL.setproj!(dataset, crs)
-                end
+# workspace
+# Use GeoArrays to do calculations of cell counts and set null values
+tmp_data = GeoArrays.read(joinpath(extract_base, "L2023031.L3m_DAY_CYAN_CI_cyano_CYAN_CONUS_300m", "2023031_2_2.tif"))
+tmp_data[:, :]
+tmp_data.f
+tmp_data.crs
+Plots.plot(tmp_data, band = 1)
 
 
-tmp_data5 = ArchGDAL.read(joinpath(extract_base, folder[1], "cellsml", "2023031_1_1.tif"))
-typeof(tmp_data5)
+# Burn in dimensions, geotransformation, and Projection for rasters
+tmp_data = GeoArrays.read(joinpath(extract_base, "L2023032.L3m_DAY_CYAN_CI_cyano_CYAN_CONUS_300m", "2023032_2_2.tif"))
+tmp_data.f
+tmp_data.crs
+up_coord = GeoArrays.coords(tmp_data, [1, 1])
+bo_coord = GeoArrays.coords(tmp_data, [2000, 2000])
 
-tmp_data6 = ArchGDAL.getband(tmp_data5, 1)
+box_coords = (up_coord[1], up_coord[2], bo_coord[1], bo_coord[2])
+tmp_file = readdlm(joinpath(extract_base, "L2023031.L3m_DAY_CYAN_CI_cyano_CYAN_CONUS_300m", "csv", "2023031.csv"), ',', Float64)
+tmp_ga = GeoArray(tmp_file)
+bbox!(tmp_ga, (min_x = up_coord[1], min_y = up_coord[2], max_x = bo_coord[1], max_y = bo_coord[2]))
+tmp_ga.crs = tmp_data.crs
+GeoArrays.write(joinpath(extract_base, "L2023031.L3m_DAY_CYAN_CI_cyano_CYAN_CONUS_300m", "csv", "2023031_g.tif"), tmp_ga, options = Dict("compression" => "deflate"))
+test_ga = GeoArrays.read(joinpath(extract_base, "L2023031.L3m_DAY_CYAN_CI_cyano_CYAN_CONUS_300m", "csv", "2023031_g.tif"))
+Plots.plot(test_ga)
 
-for i in 1:length(folder)
+# Zonal statistics
 
-    # rename oregon images
-    workspace = joinpath(extract_base, folder[i])
-    
-    workfiles = readdir(workspace)
-    
-    mkdir(joinpath(workspace, "cellsml"))
+# Load the shapefile
+cyano_lakes = Shapefile.Table("C:\\Users\\dsobota\\Desktop\\Julia_CyANapp\\Resolvable lakes\\CyAN_Waterbodies.shp") |> DataFrame
+Plots.plot(cyano_lakes.geometry)
+Plots.plot(cyano_lakes.geometry[3])
+cyano_lakes.GNIS_Name
 
-    cellsml_dir = joinpath(workspace, "cellsml")
-    
+cyano_lakes.geometry
 
-    for j in workfiles
-        # set non cyano values to null
-        tmp_data = ArchGDAL.readraster(joinpath(workspace, j))
-        data = float(tmp_data)
-        data[data .== 255] .= NaN
-        data[data .== 254] .= NaN
+cyano_lakes2 = Shapefile.Handle("C:\\Users\\dsobota\\Desktop\\Julia_CyANapp\\Resolvable lakes\\CyAN_Waterbodies.shp")
+cyano_lakes2.Point
+test_rs.crs
 
-        # convert CyAN index numbers to cells/ml
-        outCellsML = (10.0 .^ ((3.0 / 250.0) * data .- 4.2)) * 100000000
+test_rs = Rasters.Raster(joinpath(extract_base, "L2023032.L3m_DAY_CYAN_CI_cyano_CYAN_CONUS_300m", "2023032_2_2.tif"))
+Plots.plot(test_rs)
+Rasters.reproject(, test_rs[X(1), Y(1)], test_rs[Rasters.Band(1)])
 
-        # save the cells/ml to subdirectory
-        final_DIR = joinpath(cellsml_dir, j)
-        
-    end
-end
+typeof(test_rs)
 
-# Old Python code
+dims(test_rs)
+test_rs[Y(1)]
+test_rs
 
-# Convert to cells/ml , mosaic 4 tiles into one oregon image, calc zonal stats for resolvable lakes
-# Setnull and cellsml
-print("done")
+test_rs2 = ArchGDAL.readraster(joinpath(extract_base, "L2023032.L3m_DAY_CYAN_CI_cyano_CYAN_CONUS_300m", "2023032_2_2.tif"))
+typeof(test_rs2)
 
-for i in range(0, hab_days_length):
+ArchGDAL.getproj(test_rs2)
 
-    # rename oregon images
-    env.workspace = temp_dir[i]
-    arcpy.CheckOutExtension("Spatial")
+ArchGDAL.setproj!(test_rs2, NASA_ref)
 
-    os.mkdir(os.path.join(temp_dir[i], 'cellsml'))
-    cellsml_dir = os.path.join(temp_dir[i], 'cellsml')
-    output_DIR = os.path.join('c:', 'hab', 'cyan', year, 'cellsml')
-    for raster in arcpy.ListRasters():
-        # set non cyano values to null
-        outSetNull = SetNull(raster, raster, 'VALUE = 255 or VALUE = 254')
-        # 254 = land; 255 = water
-        # convert CyAN index numbers to cells/ml
-        outCellsML = (Power(10, (3.0 / 250.0 * Int(outSetNull) - 4.2))) * 100000000
+Rasters.Projected(test_rs2)
 
-        # save the cells/ml to subdirectory
-        final_DIR = os.path.join(cellsml_dir, raster)
-        outCellsML.save(final_DIR)
+ArchGDAL.reproject(test_rs, GeoFormatTypes.EPSG(4269), GeoFormatTypes.EPSG(2992))
 
-        del outSetNull
-        del outCellsML
+Rasters.setcrs(test_rs, NASA_ref)
 
-# Make mosaic directory
-# os.mkdir(os.path.join(extract_path, 'mosaic')) # Needed for start of new year
-mosaicdir = os.path.join(extract_path, 'mosaic')
+NASA_ref = ArchGDAL.toWKT(ArchGDAL.importEPSG(4269))
+Oregon_ref = ArchGDAL.toWKT(ArchGDAL.importEPSG(2992))
 
-# Mosaic
-for i in range(0, hab_days_length):
-    cellsml_dir = os.path.join(temp_dir[i], 'cellsml')
-    env.workspace = cellsml_dir
+Rasters.mappedcrs(test_rs)
 
-    sr = arcpy.SpatialReference()
-    sr.factoryCode = 5070
-    sr.create()
+Cyan_lakes_rs = Rasters.mask(test_rs; to = cyano_lakes.geometry[3])
 
-    mosaicdict = {}
+Plots.plot(Cyan_lakes_rs)
 
-    for raster in arcpy.ListRasters():
-        fileName, fileExtension = os.path.splitext(raster)
-        mosaickey = fileName[1:8]
-        mosaicfilename = fileName[1:8] + ".tif"
-        if mosaickey not in mosaicdict:
-            mosaicdict[mosaickey] = []
+test_ga
 
-        if len(mosaicdict[mosaickey]) == 0:
-            mosaicdict[mosaickey].append(raster)
-        else:
-            mosaicdict[mosaickey].append(raster)
-            if len(mosaicdict[mosaickey]) == 4:
-                print(mosaicfilename)
-                arcpy.MosaicToNewRaster_management(mosaicdict[mosaickey], mosaicdir, mosaicfilename, sr,
-                                                   "32_BIT_FLOAT", "300", "1", "LAST", "FIRST")
+# test using GMT
+input_raster = "C:/Users/dsobota/Desktop/Julia_CyANapp/Satellite data/cyan/2023/L2023032.L3m_DAY_CYAN_CI_cyano_CYAN_CONUS_300m/2023032_2_2.tif"
+output_raster = "C:/Users/dsobota/Desktop/Julia_CyANapp/Satellite data/cyan/2023/L2023032.L3m_DAY_CYAN_CI_cyano_CYAN_CONUS_300m/2023032_2_2b.tif"
+projection = "EPSG:2992"
 
-# Need to get a list of file names for zonal statistics
-# Need to modify to account for existing files in the directory
+run(`gmt grdreproject $input_raster -G$output_raster -T -V -I $projection`)
 
-mosaicfilename2 = list()
-for i, file in enumerate(os.listdir(mosaicdir)):
-    if file.endswith(".tif"):
-        mosaicfilename2.append(os.path.basename(file))
+GMT.
+# Reprojections
+output_raster = ArchGDAL.create(joinpath(extract_base,
+                                         "L2023032.L3m_DAY_CYAN_CI_cyano_CYAN_CONUS_300m",
+                                          "2023032_2_2b.tif"),
+                                driver = ArchGDAL.getdriver(test_rs2),
+                                width = ArchGDAL.width(test_rs2),
+                                height = ArchGDAL.height(test_rs2),
+                                nbands = 1,
+                                dtype = UInt8)
+# end
 
-mosaicfilename2 = mosaicfilename2[(hab_day_start - 1):(hab_day_end + 1)]
+ArchGDAL.reproject()
 
-# Need to get a list of names for mosaic key
-# Need to modify to account for existing files in the directory
+# Using GeoData
 
-mosaickey2 = list()
-for i, file in enumerate(os.listdir(mosaicdir)):
-    if file.endswith(".tif"):
-        mosaickey2.append(os.path.splitext(file)[0])
 
-mosaickey2 = mosaickey2[(hab_day_start - 1):(hab_day_end + 1)]
+# Zonal
+
+sum_cyano = Statistics.()
+
+typeof(cyano_lakes)
+
+typeof(test_ga)
+
+cyano_lakes2.geom
+
+ArchGDAL.getdriver(test_ga)
+# load the shapefile
 
 # Zonal stats
 for i in range(0, hab_days_length):

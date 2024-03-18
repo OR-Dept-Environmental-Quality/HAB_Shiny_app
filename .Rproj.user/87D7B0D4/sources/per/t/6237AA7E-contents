@@ -1,0 +1,8 @@
+# CyANconfig.py
+
+hab_days_length = 7 # Change as needed
+extract_path = '\\\\deqhq1\\wq-share\\Harmful Algal Blooms Coordination Team\\GIS\\cyan\\2021\\' # Change as needed
+hab_day_start = 224 # Change as needed
+hab_day_end = 231 # Change as needed
+zones = r"\\deqhq1\gislibrary\Base_Data\Hydrography\NHD\NHDH_ORDEQ\NHDH_ORDEQ.gdb\Hydrography\NHDWaterbody"
+dir_Shiny = "\\\\deqhq1\\wq-share\\Harmful Algal Blooms Coordination Team\\HAB_Shiny_app\\data"

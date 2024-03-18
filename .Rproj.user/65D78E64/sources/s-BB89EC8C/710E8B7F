@@ -1,0 +1,26 @@
+{
+    "id": "710E8B7F",
+    "path": "//deqhq1/WQ-Share/Harmful Algal Blooms Coordination Team/HAB_Shiny_app/Update_NASA_imagery.R",
+    "project_path": "Update_NASA_imagery.R",
+    "type": "r_source",
+    "hash": "0",
+    "contents": "",
+    "dirty": false,
+    "created": 1685641942694.0,
+    "source_on_save": false,
+    "relative_order": 4,
+    "properties": {
+        "source_window_id": "",
+        "Source": "Source",
+        "cursorPosition": "14,20",
+        "scrollLine": "0"
+    },
+    "folds": "",
+    "lastKnownWriteTime": 1658265788,
+    "encoding": "UTF-8",
+    "collab_server": "",
+    "source_window": "",
+    "last_content_update": 1658265788,
+    "read_only": false,
+    "read_only_alternatives": []
+}

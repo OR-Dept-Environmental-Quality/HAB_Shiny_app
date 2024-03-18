@@ -1,0 +1,88 @@
+---
+title: "Data for the HABs weekly report"
+output: html_notebook
+---
+
+```{r}
+day_start <- "2024054"
+
+library(httr)
+library(dplyr)
+
+# Function to create a custom session for authentication
+session <- function(username, password) {
+  httr::authenticate(username, password)
+}
+
+# Define username and password
+username <- "ygrund"
+password <- "Cosmetic88&&"
+
+# Create the session
+my_session <- session(username, password)
+
+dates <- readxl::read_excel("calendar-dates.xlsx")
+day_end <- dates %>% dplyr::filter(as.POSIXlt(Date) == as.POSIXlt(Sys.Date()-1)) %>% dplyr::pull(CyAN_File_NUM)
+print(paste0("Day State: ",dates[which(dates$CyAN_File_NUM == day_start),]$Date, " | ",day_start))
+print(paste0("Day End: ",dates[which(dates$CyAN_File_NUM == day_end),]$Date, " | ",day_end))
+
+file_num <- dates %>% dplyr::filter(as.numeric(CyAN_File_NUM) >= as.numeric(day_start) & 
+                                      as.numeric(CyAN_File_NUM) <= as.numeric(day_end))
+tiles <- c("1_1","1_2","2_1","2_2")
+
+outPath_ci <- "//deqhq1/WQ-Share/Harmful Algal Blooms Coordination Team/Satellite data/CyAN_Data_V5/Sentinel-3/CI_cyano/raw/"
+
+for(fileNum in file_num$CyAN_File_NUM) {
+  
+  # test: fileNum = "2024054"
+  year <- file_num %>% dplyr::filter(CyAN_File_NUM == fileNum) %>% dplyr::pull(Year)
+  filename_list <- list()
+
+  folder_path <- paste0(outPath_ci, year, "/temp/")
+  if(!file.exists(folder_path)) {dir.create(folder_path, showWarnings = TRUE, recursive = FALSE)}else{}
+  
+  for(tile in tiles){
+    
+    # test: tile = "1_1"
+    url <- paste0("https://oceandata.sci.gsfc.nasa.gov/getfile/L",fileNum,".L3m_DAY_CYAN_CI_cyano_CYAN_CONUS_300m_",tile,".tif")
+    filename <- sub(".*/", "", url)
+    
+    tryCatch({
+      # Submit the request using the configured session
+      response <- httr::GET(
+        url,
+        httr::progress(),
+        httr::add_headers(`User-Agent` = "Mozilla/5.0"),
+        httr::authenticate(username, password)
+      )
+      
+      # Check for successful response
+      if (httr::status_code(response) == 200) {
+        # Save the file
+        content <- httr::content(response, as = "raw")
+        writeBin(content, paste0(outPath_ci,year,"/temp/",filename))
+        print(paste0("File downloaded successfully: ",fileNum))
+      } else {
+        stop(paste0("Failed to download the file: ",filename))
+      }
+    }, error = function(e) {
+      # Handle any errors here
+      print(paste("Error:", e$message, " ", filename))
+    })
+    filename_list <- c(filename_list,filename)
+  }
+  
+  # combine four tif flies into a single file
+  raster1 <- raster::raster(paste0(outPath_ci,"/",year,"/temp/",filename_list[1]))
+  raster2 <- raster::raster(paste0(outPath_ci,"/",year,"/temp/",filename_list[2]))
+  raster3 <- raster::raster(paste0(outPath_ci,"/",year,"/temp/",filename_list[3]))
+  raster4 <- raster::raster(paste0(outPath_ci,"/",year,"/temp/",filename_list[4]))
+  raster_list <- list(raster1, raster2, raster3, raster4)
+  merged_raster <- raster::merge(raster1, raster2, raster3, raster4)
+  raster::writeRaster(merged_raster,
+                      filename = paste0(outPath_ci,year,"/",stringr::str_sub(filename, start = 1, end = 8)),
+                      format = "GTiff", overwrite = TRUE)
+}
+
+```
+

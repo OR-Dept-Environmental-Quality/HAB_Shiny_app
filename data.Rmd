@@ -3,7 +3,7 @@ title: "Prepare data for the HABs weekly report"
 output: html_notebook
 ---
 
-Step 1. Download data from NASA's data site.
+## Step 1. Download data from NASA's data site.
 
 ```{r}
 # Download data from OceanData site - not working
@@ -148,7 +148,7 @@ for (i in 1:hab_days_length) {
 
 ```
 
-Step 2. Process data.
+## Step 2. Process data.
 
 ![Figure 1. Step 2 workflow.](data/flow_chart_1.jpg)
 
@@ -308,4 +308,3 @@ for raw_name in updated_raw_names:
 
 
 ```
-

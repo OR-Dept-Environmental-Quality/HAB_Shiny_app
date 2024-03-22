@@ -186,7 +186,7 @@ try:
 except:
     print("Provide start day.")
     
-# day_start = "2024054"
+# day_start = "2016116"
 # year = day_start[:4]
 
 extent = arcpy.Extent(-2315637.32, 2919264.13, -1566307.49, 2284415.24)
@@ -206,7 +206,7 @@ updated_raw_names = raw_names[start_index:]
 
 for raw_name in updated_raw_names:
   arcpy.CheckOutExtension("Spatial")
-  # test: raw_name = 'M2003055'
+  # test: raw_name = 'L2016118'
   print(raw_name)
   
   raw_tif_path = os.path.join(raw_path, f"{raw_name}.tif")
@@ -248,11 +248,11 @@ for raw_name in updated_raw_names:
         out_table=temp_tabulate  # Use the temporary table path
         )
         
-      print("...Add date")
-      if "Date" not in [f.name for f in arcpy.ListFields(temp_tabulate)]:
-        arcpy.AddField_management(temp_tabulate, "Date", "TEXT")
+      print("...Add CyAN_File_NUM")
+      if "CyAN_File_NUM" not in [f.name for f in arcpy.ListFields(temp_tabulate)]:
+        arcpy.AddField_management(temp_tabulate, "CyAN_File_NUM", "TEXT")
 
-      with arcpy.da.UpdateCursor(temp_tabulate, ["Date"]) as cursor:
+      with arcpy.da.UpdateCursor(temp_tabulate, ["CyAN_File_NUM"]) as cursor:
         for row in cursor:
           row[0] = raw_name[1:]  # Remove the first character "L" from raw_name
           cursor.updateRow(row)
@@ -279,11 +279,11 @@ for raw_name in updated_raw_names:
         out_join_layer=None
         )
         
-      print("...Add date")
-      if "Date" not in [f.name for f in arcpy.ListFields(temp_zonal)]:
-        arcpy.AddField_management(temp_zonal, "Date", "TEXT")
+      print("...Add CyAN_File_NUM")
+      if "CyAN_File_NUM" not in [f.name for f in arcpy.ListFields(temp_zonal)]:
+        arcpy.AddField_management(temp_zonal, "CyAN_File_NUM", "TEXT")
         
-      with arcpy.da.UpdateCursor(temp_zonal, ["Date"]) as cursor:
+      with arcpy.da.UpdateCursor(temp_zonal, ["CyAN_File_NUM"]) as cursor:
         for row in cursor:
           row[0] = raw_name[1:]  # Remove the first character "L" from raw_name
           cursor.updateRow(row)
@@ -305,6 +305,5 @@ for raw_name in updated_raw_names:
   except arcpy.ExecuteError:
     print("Raster contains only null values (254 and 255). Skipping further processing for this raster.")
     continue
-
 
 ```
